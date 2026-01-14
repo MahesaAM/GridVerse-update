@@ -31,7 +31,7 @@ contextBridge.exposeInMainWorld('api', {
         let validChannels = [
             'open-directory-dialog', 'get-bios-serial', 'get-profiles-size', 'delete-all-profiles', 'clear-accounts', 'get-app-version',
             // New APIs
-            'fetch-image-base64', 'generate-gemini-prompt', 'check-config', 'open-vectorizer-login', 'process-image', 'download-vector',
+            'fetch-image-base64', 'generate-gemini-prompt', 'generate-groq-prompt', 'check-config', 'open-vectorizer-login', 'process-image', 'download-vector',
             'get-user-quota', 'update-user-generated-count', 'select-folder', 'rename-file', 'delete-file', 'read-file', 'write-file',
             'login-user', 'get-mac-address', 'write-metadata', 'open-detached-window'
         ];

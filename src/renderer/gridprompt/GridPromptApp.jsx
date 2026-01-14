@@ -148,6 +148,10 @@ export default function GridPromptApp({ onBack, onLogout }) {
                     throw new Error(`Provider ${provider} not fully supported in GridPrompt yet.`);
                 }
 
+                if (!result) {
+                    throw new Error('No response from backend (IPC Result Undefined)');
+                }
+
                 if (!result.success) {
                     console.error(`${provider} IPC Error:`, result.error);
                     throw new Error(result.error);

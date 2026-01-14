@@ -1265,7 +1265,9 @@ ipcMain.handle('generate-groq-prompt', async (event, { apiKey, base64, mimeType,
                     ]
                 }
             ],
-            max_tokens: 1024
+            max_completion_tokens: 3000,
+            temperature: 1,
+            top_p: 1
         };
 
         const response = await fetch(url, {
