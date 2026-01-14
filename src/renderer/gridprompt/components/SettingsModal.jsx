@@ -11,7 +11,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
         promptTemplate: 'Describe this image in detail for an AI art generator.',
         history: []
     });
-    const [expandedHistoryIndex, setExpandedHistoryIndex] = useState(null);
+
+    // History state removed (moved to HistoryPage)
 
     useEffect(() => {
         // Load settings from localStorage
@@ -60,12 +61,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
                         label="AI & Access"
                         onClick={() => setActiveTab('ai')}
                     />
-                    <TabButton
-                        active={activeTab === 'history'}
-                        icon={<History size={16} />}
-                        label="History"
-                        onClick={() => setActiveTab('history')}
-                    />
+
                 </div>
 
                 {/* Content */}
@@ -128,57 +124,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
                         </div>
                     )}
 
-                    {/* History Tab */}
-                    {activeTab === 'history' && (
-                        <div className="space-y-4">
-                            {settings.history && settings.history.length > 0 ? (
-                                settings.history.map((item, idx) => (
-                                    <div key={idx} className="bg-black/20 p-3 rounded-lg border border-white/5 transition-all hover:border-white/10">
-                                        <div
-                                            className="flex justify-between items-center cursor-pointer select-none"
-                                            onClick={() => setExpandedHistoryIndex(expandedHistoryIndex === idx ? null : idx)}
-                                        >
-                                            <div className="flex-1 min-w-0 mr-4">
-                                                <div className="text-xs text-slate-500 mb-1">{new Date(item.date).toLocaleString()}</div>
-                                                <div className="text-sm text-slate-300 font-medium truncate">{item.summary}</div>
-                                            </div>
-                                            <div className="text-slate-500 text-xs shrink-0 bg-white/5 px-2 py-1 rounded hover:bg-white/10 transition-colors">
-                                                {expandedHistoryIndex === idx ? 'Collapse' : 'Details'}
-                                            </div>
-                                        </div>
 
-                                        {expandedHistoryIndex === idx && item.details && (
-                                            <div className="mt-3 pt-3 border-t border-white/10 space-y-4 pl-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                                                {item.details.map((detail, dIdx) => (
-                                                    <div key={dIdx} className="text-xs space-y-1.5">
-                                                        <div className="flex items-center gap-2 text-slate-400">
-                                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${detail.status === 'success' ? 'bg-green-500' : 'bg-red-500'}`} />
-                                                            <span className="truncate opacity-70" title={detail.url}>{detail.url}</span>
-                                                        </div>
-                                                        {detail.generatedPrompt && (
-                                                            <div className="text-slate-300 bg-black/40 p-2.5 rounded border border-white/5 whitespace-pre-wrap select-text font-mono text-[11px] leading-relaxed">
-                                                                {detail.generatedPrompt}
-                                                            </div>
-                                                        )}
-                                                        {detail.error && (
-                                                            <div className="text-red-400 bg-red-900/10 p-2 rounded border border-red-500/10 select-text">
-                                                                Error: {detail.error}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="text-center text-slate-500 py-10">
-                                    <History size={48} className="mx-auto mb-4 opacity-50" />
-                                    <p>No generation history yet.</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
 
                 </div>
 

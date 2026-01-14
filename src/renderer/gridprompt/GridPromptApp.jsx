@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { RefreshCw, Globe, X, ChevronLeft, ChevronRight, History, Settings, Image, PanelRight, ArrowLeft } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import SettingsModal from './components/SettingsModal';
+import HistoryPage from './components/HistoryPage';
 
 export default function GridPromptApp({ onBack, onLogout }) {
     const [url, setUrl] = useState('https://stock.adobe.com/search?k=cyberpunk'); // Default to a useful site for scraping
@@ -13,7 +14,9 @@ export default function GridPromptApp({ onBack, onLogout }) {
     const [localImages, setLocalImages] = useState([]); // Store local images
     const [activeTab, setActiveTab] = useState('web'); // Track active sidebar tab
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
     // Processing State
     const [isProcessing, setIsProcessing] = useState(false);
@@ -55,7 +58,9 @@ export default function GridPromptApp({ onBack, onLogout }) {
 
         const filtered = rawImages.filter(img =>
             img.width >= settings.minImageWidth &&
-            img.height >= settings.minImageHeight
+            img.height >= settings.minImageHeight &&
+            !img.url.toLowerCase().endsWith('.gif') && // Exclude GIFs (spacers)
+            !img.url.includes('spacer') // Explicitly exclude known spacer names
         ).slice(0, settings.maxImages);
 
         setImages(prevImages => {
@@ -594,7 +599,11 @@ export default function GridPromptApp({ onBack, onLogout }) {
                 {/* Right Controls */}
                 <div className="flex items-center gap-2 no-drag ml-auto">
                     {/* Utility Buttons */}
-                    <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors border border-white/5" title="History">
+                    <button
+                        onClick={() => setIsHistoryOpen(true)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors border border-white/5"
+                        title="History"
+                    >
                         <History size={16} />
                     </button>
                     <button
@@ -718,6 +727,17 @@ export default function GridPromptApp({ onBack, onLogout }) {
                     <RefreshCw size={24} className="animate-spin" />
                 </button>
             )}
+
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+                onSave={(newSettings) => setSettings(newSettings)}
+            />
+
+            <HistoryPage
+                isOpen={isHistoryOpen}
+                onClose={() => setIsHistoryOpen(false)}
+            />
         </div>
     );
 }
