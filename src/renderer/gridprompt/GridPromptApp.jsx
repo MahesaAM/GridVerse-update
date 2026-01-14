@@ -80,37 +80,82 @@ export default function GridPromptApp({ onBack, onLogout }) {
             return;
         }
 
-        if (!settings.geminiApiKey) {
-            const proceed = confirm('Gemini API Key not found. Do you want to open settings to add it?');
-            if (proceed) setIsSettingsOpen(true);
+        // Read Global Config
+        const globalSaved = localStorage.getItem('global-ai-config');
+        if (!globalSaved) {
+            setToast({ type: 'error', message: 'Please configure Global AI Settings in App Launcher.' });
             return;
+        }
+        const globalConfig = JSON.parse(globalSaved);
+        const provider = globalConfig.provider || 'gemini';
+
+        // Prepare keys if Groq
+        let groqKeys = [];
+        if (provider === 'groq') {
+            const storedKeys = localStorage.getItem('groq_api_keys');
+            if (storedKeys) {
+                try {
+                    groqKeys = JSON.parse(storedKeys);
+                } catch (e) {
+                    setToast({ type: 'error', message: 'Invalid Groq keys cache.' });
+                    return;
+                }
+            }
+            if (groqKeys.length === 0 && !globalConfig.apiKey) {
+                setToast({ type: 'error', message: 'No Groq keys found.' });
+                return;
+            }
+        } else {
+            // For Gemini/GPT, check API Key
+            if (!globalConfig.apiKey) {
+                setToast({ type: 'error', message: `Missing API Key for ${provider} in Global Settings.` });
+                return;
+            }
         }
 
         setIsProcessing(true);
         processingRef.current = true;
         setProcessingStatus('Initializing...');
 
-        // Helper to call Gemini
+        // Helper to Generate Prompt based on Global Provider
         const generatePrompt = async (base64, mimeType) => {
-            console.log('Generating prompt for image...', { mimeType, base64Length: base64?.length });
-            // Use IPC handler to avoid CORS and context issues
+            console.log(`Generating prompt with ${provider}...`, { mimeType });
+
             try {
-                const result = await window.api.generateGeminiPrompt({
-                    apiKey: settings.geminiApiKey,
-                    base64,
-                    mimeType,
-                    prompt: settings.promptTemplate
-                });
+                let result;
+                if (provider === 'groq') {
+                    // Random Key Logic for Groq
+                    let apiKey = globalConfig.apiKey; // Manual override (unlikely now but safe to keep logic)
+                    if (!apiKey && groqKeys.length > 0) {
+                        apiKey = groqKeys[Math.floor(Math.random() * groqKeys.length)];
+                    }
+
+                    result = await window.api.invoke('generate-groq-prompt', {
+                        apiKey,
+                        base64,
+                        mimeType,
+                        prompt: settings.promptTemplate,
+                        model: globalConfig.model // Explicitly pass global model
+                    });
+                } else if (provider === 'gemini') {
+                    result = await window.api.generateGeminiPrompt({
+                        apiKey: globalConfig.apiKey,
+                        base64,
+                        mimeType,
+                        prompt: settings.promptTemplate
+                    });
+                } else {
+                    throw new Error(`Provider ${provider} not fully supported in GridPrompt yet.`);
+                }
 
                 if (!result.success) {
-                    console.error('Gemini IPC Error:', result.error);
+                    console.error(`${provider} IPC Error:`, result.error);
                     throw new Error(result.error);
                 }
 
-                console.log('Gemini IPC Success:', result.text);
                 return result.text;
             } catch (e) {
-                console.error('Gemini IPC Exception:', e);
+                console.error('Generation Exception:', e);
                 throw e;
             }
         };

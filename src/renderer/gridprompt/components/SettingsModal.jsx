@@ -111,16 +111,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
                     {/* AI Tab */}
                     {activeTab === 'ai' && (
                         <div className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Gemini API Key</label>
-                                <input
-                                    type="password"
-                                    value={settings.geminiApiKey}
-                                    onChange={(e) => handleChange('geminiApiKey', e.target.value)}
-                                    placeholder="Enter your Google Gemini API Key"
-                                    className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:border-blue-500 outline-none font-mono"
-                                />
-                                <p className="text-xs text-slate-500">Required for "Start Generate" image-to-text processing.</p>
+                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-300">
+                                AI Provider & Key settings have moved to the <b>App Launcher</b> (Global AI Config).
                             </div>
 
                             <div className="space-y-2">

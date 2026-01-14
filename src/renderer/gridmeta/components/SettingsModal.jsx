@@ -42,7 +42,7 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
                 <div className="flex justify-between items-center">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                         <Settings className="text-blue-500" size={20} />
-                        AI Settings
+                        Metadata Settings
                     </h2>
                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                         <X size={18} className="text-slate-400" />
@@ -50,106 +50,10 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
                 </div>
 
                 <div className="space-y-4">
-                    {/* Provider Selection */}
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">AI Provider</label>
-                        <div className="grid grid-cols-4 gap-2">
-                            {['gemini', 'gpt', 'ollama', 'groq'].map(p => (
-                                <button
-                                    key={p}
-                                    onClick={() => handleChange('provider', p)}
-                                    className={`py-2 px-3 rounded-lg border text-sm font-medium capitalize transition-all ${config.provider === p
-                                        ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-                                        : 'bg-[#18181b] border-white/5 text-slate-400 hover:border-white/20'
-                                        }`}
-                                >
-                                    {p}
-                                </button>
-                            ))}
-                        </div>
+
+                    <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-300">
+                        AI Model & API Key settings have moved to the <b>App Launcher</b> (Global AI Config).
                     </div>
-
-                    {/* API Key (Gemini/GPT/Groq) */}
-                    {(config.provider === 'gemini' || config.provider === 'gpt' || config.provider === 'groq') && (
-                        <div className="space-y-2">
-                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                <Key size={12} /> API Key
-                            </label>
-                            <input
-                                type="password"
-                                value={config.apiKey}
-                                onChange={(e) => handleChange('apiKey', e.target.value)}
-                                placeholder={`Enter ${config.provider} API Key`}
-                                className="w-full bg-[#18181b] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50"
-                            />
-                        </div>
-                    )}
-
-                    {/* Endpoint (Ollama) */}
-                    {config.provider === 'ollama' && (
-                        <div className="space-y-2">
-                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                <Settings size={12} /> Endpoint URL
-                            </label>
-                            <input
-                                type="text"
-                                value={config.endpoint}
-                                onChange={(e) => handleChange('endpoint', e.target.value)}
-                                placeholder="http://localhost:11434"
-                                className="w-full bg-[#18181b] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50"
-                            />
-                        </div>
-                    )}
-
-                    {/* Model Name */}
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            <Cpu size={12} /> Model Name
-                        </label>
-                        <select
-                            value={config.model}
-                            onChange={(e) => handleChange('model', e.target.value)}
-                            className="w-full bg-[#18181b] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50 appearance-none"
-                        >
-                            <option value="" disabled>Select a model</option>
-                            {config.provider === 'gemini' && (
-                                <>
-                                    <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended)</option>
-                                    <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp (Experimental)</option>
-                                    <option value="gemini-2.0-pro-exp">gemini-2.0-pro-exp (High Quality)</option>
-                                </>
-                            )}
-                            {config.provider === 'gpt' && (
-                                <>
-                                    <option value="gpt-4o">gpt-4o (Best for Vision)</option>
-                                    <option value="gpt-4o-mini">gpt-4o-mini (Fast & Cheap)</option>
-                                    <option value="gpt-4-turbo">gpt-4-turbo (Legacy High Quality)</option>
-                                    <option value="gpt-4-vision-preview">gpt-4-vision-preview</option>
-                                </>
-                            )}
-                            {config.provider === 'groq' && (
-                                <>
-                                    <option value="meta-llama/llama-4-scout-17b-16e-instruct">Groq Llama 4 Scout 17b 16e</option>
-                                    <option value="meta-llama/llama-4-maverick-17b-128e-instruct">Groq Llama 4 Maverick 17b 128e</option>
-                                    <option value="llama-3.2-11b-vision-preview">Llama 3.2 11b Vision Preview (Deprecated)</option>
-                                    <option value="llama-3.2-90b-vision-preview">Llama 3.2 90b Vision Preview (Deprecated)</option>
-                                </>
-                            )}
-                            {config.provider === 'ollama' && (
-                                <>
-                                    <option value="llama3.2-vision">llama3.2-vision (Best Open Source)</option>
-                                    <option value="llava">llava (Standard)</option>
-                                    <option value="moondream">moondream (Very Fast)</option>
-                                    <option value="bakllava">bakllava</option>
-                                    <option value="minicpm-v">minicpm-v (High Detail)</option>
-                                    <option value="llava-phi3">llava-phi3 (Efficient)</option>
-                                </>
-                            )}
-                        </select>
-                        <p className="text-[10px] text-slate-600">Select the model best suited for your needs.</p>
-                    </div>
-
-                    <div className="h-px bg-white/5 my-4"></div>
 
                     {/* Metadata Constraints */}
                     <div className="space-y-3">

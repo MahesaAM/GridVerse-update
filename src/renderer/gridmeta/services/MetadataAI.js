@@ -186,11 +186,6 @@ export const MetadataAI = {
 
         let model = config.model || 'meta-llama/llama-4-scout-17b-16e-instruct';
 
-        // Ensure meta-llama/ prefix for llama models if missing
-        if (model.startsWith('llama-4') || model.startsWith('llama-3')) {
-            model = 'meta-llama/' + model;
-        }
-
         const url = 'https://api.groq.com/openai/v1/chat/completions';
 
         const prompt = getSystemPrompt(config);
@@ -275,14 +270,21 @@ export const MetadataAI = {
 
     parseJSON(text) {
         try {
-            // Clean markdown code blocks if present
+            // Attempt to find the JSON object within the text
+            const firstBrace = text.indexOf('{');
+            const lastBrace = text.lastIndexOf('}');
+
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                const jsonString = text.substring(firstBrace, lastBrace + 1);
+                return JSON.parse(jsonString);
+            }
+
+            // Fallback to original cleaning if braces aren't clear (though standard JSON always has them)
             const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
             return JSON.parse(clean);
         } catch (e) {
             console.error("JSON Parse Error", e, text);
-            // Fallback: simple text extraction if JSON fails?
-            // For now, assume strict compliance or throw
-            throw new Error("Failed to parse AI response as JSON");
+            throw new Error("Failed to parse AI response. The model may have returned invalid JSON.");
         }
     }
 };

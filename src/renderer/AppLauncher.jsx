@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { LogOut, Video, Images, Text, PenTool, Tag, User, X } from 'lucide-react';
+import { LogOut, Video, Images, Text, PenTool, Tag, User, X, Sparkles } from 'lucide-react';
 // import WindowControls from './components/WindowControls'; // Import WindowControls
 import gridverseLogo from './assets/gridverse.png'; // Import custom logo
 import SpotlightCard from './components/SpotlightCard';
 import AccountManager from './components/AccountManager';
+import GlobalAISettingsModal from './components/GlobalAISettingsModal';
 
 const APPS = [
     {
@@ -60,6 +61,7 @@ const APPS = [
 
 export default function AppLauncher({ onSelectApp, onLogout, appVersion, expirationDate }) {
     const [showAccountManager, setShowAccountManager] = useState(false);
+    const [showGlobalSettings, setShowGlobalSettings] = useState(false);
 
     return (
         <div className="h-full w-full flex flex-col bg-black text-white relative overflow-hidden font-sans selection:bg-purple-500/30">
@@ -74,6 +76,15 @@ export default function AppLauncher({ onSelectApp, onLogout, appVersion, expirat
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {/* Global AI Settings Button */}
+                    <button
+                        onClick={() => setShowGlobalSettings(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:bg-purple-500/10 hover:border-purple-500/30 hover:text-purple-400 transition-all duration-300 text-[10px] font-medium group no-drag"
+                    >
+                        <span>AI Config</span>
+                        <Sparkles className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                    </button>
+
                     {/* Manage Accounts Button */}
                     <button
                         onClick={() => setShowAccountManager(true)}
@@ -161,6 +172,13 @@ export default function AppLauncher({ onSelectApp, onLogout, appVersion, expirat
                     </div>
                 </div>
             )}
+
+            {/* Global AI Settings Modal */}
+            <GlobalAISettingsModal
+                isOpen={showGlobalSettings}
+                onClose={() => setShowGlobalSettings(false)}
+                onSave={(config) => console.log('Global AI Config Saved', config)}
+            />
         </div>
     );
 }

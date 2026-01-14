@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './services/supabase';
 import Login from './components/Login';
 import AppLauncher from './AppLauncher';
 import GridVidApp from './GridVidApp';
@@ -11,10 +11,6 @@ import GridMetaApp from './gridmeta/GridMetaApp';
 import GridVectorApp from './gridvector/GridVectorApp';
 import BrowserLayout from './components/Browser/BrowserLayout';
 import WindowControls from './components/WindowControls';
-
-const supabaseUrl = 'https://wdvedlmnapxxfvpyfwqa.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkdmVkbG1uYXB4eGZ2cHlmd3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MjE5NzUsImV4cCI6MjA2MDM5Nzk3NX0.yLIbYKF1PfzEo3gMO0H8SgXN8AAPRYgDTJewg8nb7GA';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 
 class ErrorBoundary extends React.Component {
@@ -54,6 +50,26 @@ export default function App() {
     const [currentApp, setCurrentApp] = useState('launcher'); // 'launcher' | 'gridvid' | 'gridbot'
 
     useEffect(() => {
+        const fetchApiKeys = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('apikey')
+                    .select('apikey');
+
+                if (error) {
+                    console.error('Error fetching API keys:', error);
+                } else if (data) {
+                    const keys = data.map(item => item.apikey).filter(Boolean);
+                    localStorage.setItem('groq_api_keys', JSON.stringify(keys));
+                    console.log('Updated Groq API keys cache:', keys.length, 'keys');
+                }
+            } catch (err) {
+                console.error('Exception fetching API keys:', err);
+            }
+        };
+
+        fetchApiKeys();
+
         const validateSession = async () => {
             const storedUser = localStorage.getItem('gridvidUser');
             if (storedUser) {

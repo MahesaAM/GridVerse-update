@@ -32,14 +32,21 @@ export default function GridMetaApp({ onBack }) {
     const stopBatchRef = useRef(false);
 
     const handleAutoGenerateClick = () => {
-        const saved = localStorage.getItem('gridmeta-ai-config');
-        if (saved) {
+        const globalSaved = localStorage.getItem('global-ai-config');
+        const localSaved = localStorage.getItem('gridmeta-ai-config');
+
+        if (globalSaved && localSaved) {
             try {
-                const config = JSON.parse(saved);
+                const globalConfig = JSON.parse(globalSaved);
+                const localConfig = JSON.parse(localSaved);
+
+                // Merge configs: Local Metadata settings + Global AI settings (Global overrides AI params)
+                const config = { ...localConfig, ...globalConfig };
+
                 // Basic validation
-                if ((config.provider === 'gemini' || config.provider === 'gpt' || config.provider === 'groq') && !config.apiKey) {
-                    setToast({ type: 'error', message: 'API Key is missing. Check Settings.' });
-                    setIsSettingsOpen(true);
+                // Note: Groq keys are auto-injected if missing, so we check others
+                if ((config.provider === 'gemini' || config.provider === 'gpt') && !config.apiKey) {
+                    setToast({ type: 'error', message: 'Global AI API Key is missing. Check App Settings.' });
                     return;
                 }
                 stopBatchRef.current = false;
@@ -49,7 +56,8 @@ export default function GridMetaApp({ onBack }) {
                 setIsSettingsOpen(true);
             }
         } else {
-            setToast({ type: 'error', message: 'Please configure AI settings first.' });
+            if (!globalSaved) setToast({ type: 'error', message: 'Please configure Global AI Settings in App Launcher.' });
+            else setToast({ type: 'error', message: 'Please configure Metadata Settings.' });
             setIsSettingsOpen(true);
         }
     };
@@ -65,22 +73,46 @@ export default function GridMetaApp({ onBack }) {
 
             setProcessingId(file.id);
             let attempts = 0;
-            const maxAttempts = 3;
             let success = false;
 
-            while (attempts < maxAttempts && !success && !stopBatchRef.current) {
+            // Retry indefinitely until success or stop is clicked
+            while (!success && !stopBatchRef.current) {
                 try {
                     attempts++;
                     const res = await fetch(file.preview);
                     const blob = await res.blob();
 
-                    const reader = new FileReader();
-                    reader.readAsDataURL(blob);
-                    const base64 = await new Promise(resolve => {
+                    const base64 = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
                         reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
                     });
 
-                    const meta = await MetadataAI.generate(file, base64, config);
+                    // INJECT RANDOM GROQ KEY IF PROVIDER IS GROQ
+                    let effectiveConfig = { ...config };
+                    if (config.provider === 'groq') {
+                        const storedKeys = localStorage.getItem('groq_api_keys');
+                        if (storedKeys) {
+                            try {
+                                const keys = JSON.parse(storedKeys);
+                                if (keys.length > 0) {
+                                    const randomKey = keys[Math.floor(Math.random() * keys.length)];
+                                    console.log(`[GridMeta] Using Random Groq Key (one of ${keys.length})`);
+                                    effectiveConfig.apiKey = randomKey;
+                                } else {
+                                    console.warn('[GridMeta] No keys found in storage, using user setting.');
+                                }
+                            } catch (e) {
+                                console.error('[GridMeta] Error parsing keys', e);
+                            }
+                        }
+                        if (!effectiveConfig.apiKey) {
+                            throw new Error('No Groq API key available (none in storage or settings).');
+                        }
+                    }
+
+                    const meta = await MetadataAI.generate(file, base64, effectiveConfig);
                     updateFileMetadata(file.id, meta);
 
                     try {
@@ -100,15 +132,15 @@ export default function GridMetaApp({ onBack }) {
                     const isLimit = err.message.toLowerCase().includes('limit');
                     console.error(`Attempt ${attempts} failed for ${file.name}:`, err);
 
-                    if (isLimit && attempts < maxAttempts) {
-                        setToast({ type: 'error', message: `Rate limit reached. Retrying (${attempts}/${maxAttempts})...` });
-                        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5s before retry
-                        continue;
-                    }
+                    // For ANY error, we wait and retry, as per user request to never skip
+                    const retryDelay = isLimit ? 5000 : 2000;
+                    // setToast({ type: 'error', message: `Error: ${err.message}. Retrying... (${attempts})` });
+                    console.warn(`[GridMeta] Error: ${err.message}. Retrying... (${attempts})`);
 
-                    setStats(prev => ({ ...prev, generated: prev.generated + 1, failed: prev.failed + 1 }));
-                    setToast({ type: 'error', message: isLimit ? 'Rate limit exceeded.' : `Failed: ${err.message}` });
-                    break; // stop retrying for non-limit errors
+                    if (stopBatchRef.current) break;
+
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    // Loop continues automatically since success is false
                 }
             }
 

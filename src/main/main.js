@@ -1242,6 +1242,63 @@ ipcMain.handle('generate-gemini-prompt', async (event, { apiKey, base64, mimeTyp
     }
 });
 
+ipcMain.handle('generate-groq-prompt', async (event, { apiKey, base64, mimeType, prompt, model: modelParam }) => {
+    try {
+        console.log('[Main] Generating Groq Prompt...');
+        // Default to Llama 4 Scout if not specified
+        const model = modelParam || 'meta-llama/llama-4-scout-17b-16e-instruct';
+        const url = 'https://api.groq.com/openai/v1/chat/completions';
+
+        const requestBody = {
+            model: model,
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: prompt || "Describe this image in detail for an AI art generator." },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                url: `data:${mimeType || 'image/jpeg'};base64,${base64}`
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens: 1024
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            console.error('Groq API Error Response:', err);
+            return { success: false, error: `Groq API Failed: ${err}` };
+        }
+
+        const data = await response.json();
+
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            return { success: false, error: 'Invalid response structure from Groq API' };
+        }
+
+        const generatedText = data.choices[0].message.content;
+        console.log('[Main] Groq Prompt Generated (len):', generatedText.length);
+        return { success: true, text: generatedText };
+
+    } catch (error) {
+        console.error('Error calling Groq API:', error);
+        return { success: false, error: error.message };
+    }
+});
+
 // Metadata Writing
 const { exiftool } = require('exiftool-vendored');
 
