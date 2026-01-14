@@ -46,8 +46,8 @@ export default function AIGenModal({ isOpen, onClose, onStart }) {
                     {/* Provider Selection */}
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">AI Provider</label>
-                        <div className="grid grid-cols-3 gap-2">
-                            {['gemini', 'gpt', 'ollama'].map(p => (
+                        <div className="grid grid-cols-4 gap-2">
+                            {['gemini', 'gpt', 'ollama', 'groq'].map(p => (
                                 <button
                                     key={p}
                                     onClick={() => handleChange('provider', p)}
@@ -62,8 +62,8 @@ export default function AIGenModal({ isOpen, onClose, onStart }) {
                         </div>
                     </div>
 
-                    {/* API Key (Gemini/GPT) */}
-                    {(config.provider === 'gemini' || config.provider === 'gpt') && (
+                    {/* API Key (Gemini/GPT/Groq) */}
+                    {(config.provider === 'gemini' || config.provider === 'gpt' || config.provider === 'groq') && (
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                                 <Key size={12} /> API Key
@@ -105,7 +105,8 @@ export default function AIGenModal({ isOpen, onClose, onStart }) {
                             onChange={(e) => handleChange('model', e.target.value)}
                             placeholder={
                                 config.provider === 'gemini' ? 'gemini-2.5-flash' :
-                                    config.provider === 'gpt' ? 'gpt-4o' : 'llava'
+                                    config.provider === 'gpt' ? 'gpt-4o' :
+                                        config.provider === 'groq' ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llava'
                             }
                             className="w-full bg-[#18181b] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500/50"
                         />

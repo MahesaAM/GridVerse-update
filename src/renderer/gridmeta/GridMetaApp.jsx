@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { ArrowLeft, Upload, X, Check, Sparkles, Play, Settings, Info, Type, MoreVertical, Tag, FileVideo, FileImage, Loader2 } from 'lucide-react';
+import { ArrowLeft, Upload, X, Check, Sparkles, Play, Settings, Info, Type, MoreVertical, Tag, FileVideo, FileImage, Loader2, Square } from 'lucide-react';
 // import WindowControls from '../components/WindowControls'; // Import WindowControls
 import gridverseLogo from '../assets/gridverse.png'; // Import Logo
 import SettingsModal from './components/SettingsModal';
@@ -11,6 +11,7 @@ export default function GridMetaApp({ onBack }) {
     const [dragActive, setDragActive] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [processingId, setProcessingId] = useState(null);
+    const [stats, setStats] = useState({ generated: 0, success: 0, failed: 0 });
 
     const [toast, setToast] = useState(null); // { type: 'success'|'error', message: '' }
 
@@ -28,17 +29,20 @@ export default function GridMetaApp({ onBack }) {
         setFiles(prev => prev.map(f => f.id === id ? { ...f, metadata: { ...f.metadata, ...newMeta } } : f));
     };
 
+    const stopBatchRef = useRef(false);
+
     const handleAutoGenerateClick = () => {
         const saved = localStorage.getItem('gridmeta-ai-config');
         if (saved) {
             try {
                 const config = JSON.parse(saved);
                 // Basic validation
-                if ((config.provider === 'gemini' || config.provider === 'gpt') && !config.apiKey) {
+                if ((config.provider === 'gemini' || config.provider === 'gpt' || config.provider === 'groq') && !config.apiKey) {
                     setToast({ type: 'error', message: 'API Key is missing. Check Settings.' });
                     setIsSettingsOpen(true);
                     return;
                 }
+                stopBatchRef.current = false;
                 handleBatchGeneration(config);
             } catch (e) {
                 setToast({ type: 'error', message: 'Invalid settings. Please configure again.' });
@@ -54,52 +58,68 @@ export default function GridMetaApp({ onBack }) {
         const queue = files;
 
         for (const file of queue) {
-            // ... (rest of logic remains same, just ensuring scope is correct)
-            setProcessingId(file.id);
-            try {
-                let blob;
-                if (file.path.startsWith('blob:')) {
-                    const res = await fetch(file.preview);
-                    blob = await res.blob();
-                } else {
-                    const res = await fetch(file.preview);
-                    blob = await res.blob();
-                }
-
-                const reader = new FileReader();
-                reader.readAsDataURL(blob);
-                const base64 = await new Promise(resolve => {
-                    reader.onloadend = () => resolve(reader.result);
-                });
-
-                const meta = await MetadataAI.generate(file, base64, config);
-                updateFileMetadata(file.id, meta);
-
-                // Auto-embed metadata immediately
-                try {
-                    if (file.path && !file.path.startsWith('blob:')) {
-                        console.log(`Auto-embedding metadata for ${file.name}...`);
-                        await window.api.invoke('write-metadata', {
-                            filePath: file.path,
-                            metadata: meta
-                        });
-                        console.log(`Auto-embed success for ${file.name}`);
-                    }
-                } catch (saveErr) {
-                    console.error(`Auto-embed failed for ${file.name}:`, saveErr);
-                }
-
-            } catch (err) {
-                console.error(`Error processing file ${file.name}:`, err);
-                setToast({ type: 'error', message: `Error: ${file.name}: ${err.message}` });
-                // Optionally mark as error state
+            if (stopBatchRef.current) {
+                setToast({ type: 'info', message: 'Stopped' });
+                break;
             }
 
-            // Add delay to avoid rate limits (especially for free tier)
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            setProcessingId(file.id);
+            let attempts = 0;
+            const maxAttempts = 3;
+            let success = false;
+
+            while (attempts < maxAttempts && !success && !stopBatchRef.current) {
+                try {
+                    attempts++;
+                    const res = await fetch(file.preview);
+                    const blob = await res.blob();
+
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    const base64 = await new Promise(resolve => {
+                        reader.onloadend = () => resolve(reader.result);
+                    });
+
+                    const meta = await MetadataAI.generate(file, base64, config);
+                    updateFileMetadata(file.id, meta);
+
+                    try {
+                        if (file.path && !file.path.startsWith('blob:')) {
+                            await window.api.invoke('write-metadata', {
+                                filePath: file.path,
+                                metadata: meta
+                            });
+                        }
+                    } catch (saveErr) {
+                        console.error(`Auto-embed failed:`, saveErr);
+                    }
+                    success = true;
+                    setStats(prev => ({ ...prev, generated: prev.generated + 1, success: prev.success + 1 }));
+
+                } catch (err) {
+                    const isLimit = err.message.toLowerCase().includes('limit');
+                    console.error(`Attempt ${attempts} failed for ${file.name}:`, err);
+
+                    if (isLimit && attempts < maxAttempts) {
+                        setToast({ type: 'error', message: `Rate limit reached. Retrying (${attempts}/${maxAttempts})...` });
+                        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5s before retry
+                        continue;
+                    }
+
+                    setStats(prev => ({ ...prev, generated: prev.generated + 1, failed: prev.failed + 1 }));
+                    setToast({ type: 'error', message: isLimit ? 'Rate limit exceeded.' : `Failed: ${err.message}` });
+                    break; // stop retrying for non-limit errors
+                }
+            }
+
+            // Add delay between files to avoid rate limits
+            const delayMs = (config.delay ?? 3) * 1000;
+            await new Promise(resolve => setTimeout(resolve, delayMs));
         }
         setProcessingId(null);
-        setToast({ type: 'success', message: 'Batch Generation & Embedding Complete!' });
+        if (!stopBatchRef.current) {
+            setToast({ type: 'success', message: 'Batch Complete!' });
+        }
     };
 
     // Drag Handling
@@ -186,33 +206,46 @@ export default function GridMetaApp({ onBack }) {
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col">
                             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Generated</span>
-                            <span className="text-sm font-bold text-white leading-none">0</span>
+                            <span className="text-sm font-bold text-white leading-none">{stats.generated}</span>
                         </div>
                         <div className="w-px h-6 bg-white/10" />
                         <div className="flex flex-col">
                             <span className="text-[10px] text-emerald-500/70 font-bold uppercase tracking-wider">Success</span>
-                            <span className="text-sm font-bold text-emerald-400 leading-none">0</span>
+                            <span className="text-sm font-bold text-emerald-400 leading-none">{stats.success}</span>
                         </div>
                         <div className="w-px h-6 bg-white/10" />
                         <div className="flex flex-col">
                             <span className="text-[10px] text-red-500/70 font-bold uppercase tracking-wider">Failed</span>
-                            <span className="text-sm font-bold text-red-400 leading-none">0</span>
+                            <span className="text-sm font-bold text-red-400 leading-none">{stats.failed}</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3 no-drag">
-                    <button
-                        onClick={handleAutoGenerateClick}
-                        disabled={files.length === 0}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center gap-1.5 border ${files.length === 0
-                            ? 'bg-white/5 text-slate-500 border-white/5 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white border-white/10'
-                            }`}
-                    >
-                        <Sparkles size={14} />
-                        <span>Auto Generate</span>
-                    </button>
+                    {processingId ? (
+                        <button
+                            onClick={() => {
+                                stopBatchRef.current = true;
+                                setToast({ type: 'info', message: 'Stopping after current file...' });
+                            }}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center gap-1.5 border bg-red-600 hover:bg-red-500 text-white border-white/10 animate-pulse"
+                        >
+                            <Square size={14} fill="currentColor" />
+                            <span>Stop Generate</span>
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleAutoGenerateClick}
+                            disabled={files.length === 0}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-lg flex items-center gap-1.5 border ${files.length === 0
+                                ? 'bg-white/5 text-slate-500 border-white/5 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white border-white/10'
+                                }`}
+                        >
+                            <Sparkles size={14} />
+                            <span>Auto Generate</span>
+                        </button>
+                    )}
 
                     <button
                         onClick={() => setIsSettingsOpen(true)}

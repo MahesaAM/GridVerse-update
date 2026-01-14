@@ -10,7 +10,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
         // Default Metadata Constraints
         titleLength: 10,
         descriptionLength: 30,
-        keywordCount: 49
+        keywordCount: 49,
+        delay: 3
     });
 
     useEffect(() => {
@@ -52,8 +53,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
                     {/* Provider Selection */}
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">AI Provider</label>
-                        <div className="grid grid-cols-3 gap-2">
-                            {['gemini', 'gpt', 'ollama'].map(p => (
+                        <div className="grid grid-cols-4 gap-2">
+                            {['gemini', 'gpt', 'ollama', 'groq'].map(p => (
                                 <button
                                     key={p}
                                     onClick={() => handleChange('provider', p)}
@@ -68,8 +69,8 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
                         </div>
                     </div>
 
-                    {/* API Key (Gemini/GPT) */}
-                    {(config.provider === 'gemini' || config.provider === 'gpt') && (
+                    {/* API Key (Gemini/GPT/Groq) */}
+                    {(config.provider === 'gemini' || config.provider === 'gpt' || config.provider === 'groq') && (
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                                 <Key size={12} /> API Key
@@ -124,6 +125,14 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
                                     <option value="gpt-4o-mini">gpt-4o-mini (Fast & Cheap)</option>
                                     <option value="gpt-4-turbo">gpt-4-turbo (Legacy High Quality)</option>
                                     <option value="gpt-4-vision-preview">gpt-4-vision-preview</option>
+                                </>
+                            )}
+                            {config.provider === 'groq' && (
+                                <>
+                                    <option value="meta-llama/llama-4-scout-17b-16e-instruct">Groq Llama 4 Scout 17b 16e</option>
+                                    <option value="meta-llama/llama-4-maverick-17b-128e-instruct">Groq Llama 4 Maverick 17b 128e</option>
+                                    <option value="llama-3.2-11b-vision-preview">Llama 3.2 11b Vision Preview (Deprecated)</option>
+                                    <option value="llama-3.2-90b-vision-preview">Llama 3.2 90b Vision Preview (Deprecated)</option>
                                 </>
                             )}
                             {config.provider === 'ollama' && (
@@ -181,6 +190,22 @@ export default function SettingsModal({ isOpen, onClose, onSave }) {
                                     className="w-full bg-[#18181b] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/50 text-center"
                                 />
                             </div>
+                        </div>
+
+                        {/* Generation Delay */}
+                        <div className="space-y-1">
+                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                <Play size={12} /> Generation Delay (Seconds)
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="60"
+                                value={config.delay ?? 3}
+                                onChange={(e) => handleChange('delay', parseInt(e.target.value))}
+                                className="w-full bg-[#18181b] border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500/50"
+                            />
+                            <p className="text-[10px] text-slate-600">Wait time between processing each file.</p>
                         </div>
                     </div>
                 </div>

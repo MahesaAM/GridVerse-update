@@ -15,32 +15,34 @@ const getSystemPrompt = (config) => {
     const kwCount = config.keywordCount || 49;
 
     return `
-You are an expert stock photography and videography metadata specialist for Adobe Stock.
-Your goal is to maximize the SEO potential (Search Engine Optimization) and sales conversion of the uploaded media.
+Analyze the provided image/video and generate high-quality metadata for Adobe Stock.
+Your goal is to maximize SEO and commercial conversion.
 
-Analyze the image/video and provide metadata in standard English following these STRICT guidelines:
+**METADATA SPECIFICATIONS:**
+- **Title**: A compelling, natural sentence. Max ${titleLength} words or ~150 characters.
+  - DO NOT use colons (:).
+  - DO NOT use generic phrases like "photo of", "image includes", "this is a picture of".
+  - Think like a buyer searching for this content. Use action words and emotional triggers.
+- **Description**: Detailed and benefit-focused. Max ${descLength} words or ~150 characters.
+  - Explain the mood, atmosphere, and potential commercial uses.
+  - DO NOT mention technical file info (vector, SVG, JPG, etc.).
+- **Keywords**: Approximately ${kwCount} highly relevant single-word keywords.
+  - NO compound words or phrases.
+  - NO dashes or hyphens.
+  - Prioritize search volume and buyer intent.
+  - EACH KEYWORD MUST BE SEPARATED BY A COMMA AND A SPACE.
 
-1. **Title**:
-   - Concise, literal, and descriptive (max ${titleLength} words).
-   - Must contain the main subject and action.
-   - Example: "Business woman typing on laptop in modern office"
-
-2. **Description**:
-   - Detailed and commercial (max ${descLength} words).
-   - Include the "Who, What, When, Where, Why".
-   - Mention lighting, mood, and concept if relevant (e.g., "cinematic lighting", "teamwork concept").
-
-3. **Keywords**:
-   - Exactly ${kwCount} relevant keywords.
-   - **CRITICAL**: The first 10 keywords MUST be the most important (Subject, Action, Context).
-   - Include conceptual keywords (e.g., "success", "technology", "together") but prioritize visual elements.
-   - All lowercase, comma-separated.
+**CRITICAL RULES:**
+- NO reference to "image", "vector", "graphic", "illustration" unless it's the subject.
+- NO technical jargon about file formats.
+- STRICTLY return raw JSON based on the structure below.
 
 Output MUST be valid JSON with this structure:
 {
-  "title": "Title string",
-  "description": "Description string",
-  "keywords": "keyword1, keyword2, keyword3, ..."
+  "title": "Natural stone bridge in autumn forest with golden light",
+  "description": "Stunning natural stone bridge crossing a peaceful stream during peak autumn foliage, perfect for travel and nature concepts.",
+  "keywords": "autumn, forest, bridge, stream, nature, landscape, travel, golden, light, peace, etc",
+  "category": "11"
 }
 Do not include markdown formatting like \`\`\`json. Just return the raw JSON string.
 `;
@@ -64,6 +66,8 @@ export const MetadataAI = {
                 return this.callGPT(fileData, config); // GPT usually handles data URI automatically or we parse it
             case 'ollama':
                 return this.callOllama(base64Clean, config);
+            case 'groq':
+                return this.callGroq(fileData, config); // Groq mimics OpenAI API
             case 'mock': // For testing/dev
                 return this.callMock();
             default:
@@ -117,7 +121,14 @@ export const MetadataAI = {
         const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-        return this.parseJSON(text);
+        const result = this.parseJSON(text);
+
+        return {
+            title: result.title,
+            description: result.description,
+            keywords: result.keywords,
+            category: result.category || ""
+        };
     },
 
     async callGPT(dataUrl, config) {
@@ -159,7 +170,69 @@ export const MetadataAI = {
 
         const data = await response.json();
         const text = data.choices?.[0]?.message?.content;
-        return this.parseJSON(text);
+        const result = this.parseJSON(text);
+
+        return {
+            title: result.title,
+            description: result.description,
+            keywords: result.keywords,
+            category: result.category || ""
+        };
+    },
+
+    async callGroq(dataUrl, config) {
+        const apiKey = config.apiKey;
+        if (!apiKey) throw new Error("Groq API Key is required");
+
+        let model = config.model || 'meta-llama/llama-4-scout-17b-16e-instruct';
+
+        // Ensure meta-llama/ prefix for llama models if missing
+        if (model.startsWith('llama-4') || model.startsWith('llama-3')) {
+            model = 'meta-llama/' + model;
+        }
+
+        const url = 'https://api.groq.com/openai/v1/chat/completions';
+
+        const prompt = getSystemPrompt(config);
+
+        const payload = {
+            model: model,
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: prompt },
+                        { type: "image_url", image_url: { url: dataUrl } }
+                    ]
+                }
+            ],
+            max_tokens: 1024
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error?.message || 'Groq API Error');
+        }
+
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        const result = this.parseJSON(text);
+
+        return {
+            title: result.title,
+            description: result.description,
+            keywords: result.keywords,
+            category: result.category || ""
+        };
     },
 
     async callOllama(base64Image, config) {
@@ -190,7 +263,14 @@ export const MetadataAI = {
         }
 
         const data = await response.json();
-        return this.parseJSON(data.response);
+        const result = this.parseJSON(data.response);
+
+        return {
+            title: result.title,
+            description: result.description,
+            keywords: result.keywords,
+            category: result.category || ""
+        };
     },
 
     parseJSON(text) {
