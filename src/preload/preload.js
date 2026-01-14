@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld('api', {
             // New APIs
             'fetch-image-base64', 'generate-gemini-prompt', 'check-config', 'open-vectorizer-login', 'process-image', 'download-vector',
             'get-user-quota', 'update-user-generated-count', 'select-folder', 'rename-file', 'delete-file', 'read-file', 'write-file',
-            'login-user', 'get-mac-address', 'write-metadata'
+            'login-user', 'get-mac-address', 'write-metadata', 'open-detached-window'
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, data);
@@ -67,7 +67,9 @@ contextBridge.exposeInMainWorld('api', {
     renameFile: (data) => ipcRenderer.invoke('rename-file', data),
     deleteFile: (path) => ipcRenderer.invoke('delete-file', path),
     readFile: (path) => ipcRenderer.invoke('read-file', path),
-    writeFile: (data) => ipcRenderer.invoke('write-file', data)
+    readFile: (path) => ipcRenderer.invoke('read-file', path),
+    writeFile: (data) => ipcRenderer.invoke('write-file', data),
+    openDetachedWindow: (appId) => ipcRenderer.invoke('open-detached-window', appId)
 });
 
 console.log('[Preload] API exposed successfully');

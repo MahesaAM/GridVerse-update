@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import Tab from './Tab';
-import { Plus, Home } from 'lucide-react';
+import { Plus, Home, ExternalLink } from 'lucide-react';
 import WindowControls from '../WindowControls';
 
 const TabBar = ({ tabs, activeTabId, onTabClick, onTabClose, onNewTab, onHome }) => {
@@ -50,6 +50,28 @@ const TabBar = ({ tabs, activeTabId, onTabClick, onTabClose, onNewTab, onHome })
                 >
                     <Home className="w-4 h-4" />
                 </button>
+                {/* Detach Button - Only show if active tab is not launcher */}
+                {(() => {
+                    const activeTab = tabs.find(t => t.id === activeTabId);
+                    if (activeTab && activeTab.component !== 'launcher') {
+                        return (
+                            <button
+                                onClick={() => {
+                                    if (window.api && window.api.openDetachedWindow) {
+                                        window.api.openDetachedWindow(activeTab.component);
+                                        // Close tab after detaching as requested
+                                        onTabClose(activeTabId);
+                                    }
+                                }}
+                                className="w-10 h-full flex items-center justify-center text-gray-500 hover:text-blue-400 hover:bg-white/5 transition-colors"
+                                title="Detach Tab"
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                            </button>
+                        );
+                    }
+                    return null;
+                })()}
                 <div className="h-4 w-px bg-white/10 mx-1"></div>
                 <WindowControls />
             </div>

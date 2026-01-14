@@ -10,6 +10,7 @@ import GridPromptApp from './gridprompt/GridPromptApp';
 import GridMetaApp from './gridmeta/GridMetaApp';
 import GridVectorApp from './gridvector/GridVectorApp';
 import BrowserLayout from './components/Browser/BrowserLayout';
+import WindowControls from './components/WindowControls';
 
 const supabaseUrl = 'https://wdvedlmnapxxfvpyfwqa.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkdmVkbG1uYXB4eGZ2cHlmd3FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MjE5NzUsImV4cCI6MjA2MDM5Nzk3NX0.yLIbYKF1PfzEo3gMO0H8SgXN8AAPRYgDTJewg8nb7GA';
@@ -144,6 +145,73 @@ export default function App() {
 
     // Authenticated State Router
     // BrowserLayout handles internal routing/tabs
+
+    // Check for detached app param
+    const urlParams = new URLSearchParams(window.location.search);
+    const detachedApp = urlParams.get('app');
+
+    if (detachedApp) {
+        // Render specific app directly
+        const commonProps = {
+            onLogout: handleLogout,
+            appVersion,
+            expirationDate,
+            // In standalone mode, maybe a back button or not needed.
+            // But we should pass onBack=null or handle it? Most apps don't use it if not top level.
+            onBack: null
+        };
+
+        const renderDetached = () => {
+            switch (detachedApp) {
+                case 'gridvid': return <GridVidApp {...commonProps} />;
+                case 'gridbot': return <GridBotApp {...commonProps} />;
+                case 'gridprompt': return <GridPromptApp {...commonProps} />;
+                case 'gridmeta': return <GridMetaApp {...commonProps} />;
+                case 'gridvector':
+                    return (
+                        <div style={{ height: '100vh', width: '100vw' }}>
+                            <HashRouter>
+                                <GridVectorApp {...commonProps} />
+                            </HashRouter>
+                        </div>
+                    );
+                default:
+                    return <div className="text-white p-10">Unknown App: {detachedApp}</div>;
+            }
+        };
+
+        const appTitleMap = {
+            'gridvid': 'GridVid',
+            'gridbot': 'GridBot',
+            'gridprompt': 'GridPrompt',
+            'gridmeta': 'GridMeta',
+            'gridvector': 'GridVector'
+        };
+
+        const title = appTitleMap[detachedApp] || 'GridVerse App';
+
+        return (
+            <ErrorBoundary>
+                <div className="h-screen w-screen bg-black flex flex-col overflow-hidden">
+                    {/* Detached Window Header */}
+                    <div className="h-10 shrink-0 bg-[#0a0a0a] border-b border-white/5 flex items-center justify-between px-4 draggable-region select-none z-50">
+                        <div className="flex items-center gap-2">
+                            {/* Small Logo or Icon could go here */}
+                            <span className="text-xs font-bold text-gray-400 tracking-wide uppercase">{title}</span>
+                        </div>
+                        <WindowControls />
+                    </div>
+
+                    {/* Main Content Area */}
+                    <div className="flex-1 relative overflow-hidden">
+                        {renderDetached()}
+                    </div>
+                </div>
+            </ErrorBoundary>
+        );
+    }
+
+
     return (
         <ErrorBoundary>
             <BrowserLayout

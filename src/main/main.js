@@ -348,15 +348,72 @@ ipcMain.on('check-for-update', () => {
 
 // ——— IPC Handlers ———
 
-ipcMain.on('minimize', () => mainWindow.minimize());
-ipcMain.on('maximize', () => {
-    if (mainWindow.isMaximized()) mainWindow.unmaximize();
-    else mainWindow.maximize();
+ipcMain.on('minimize', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) win.minimize();
 });
-ipcMain.on('close', () => mainWindow.close());
+ipcMain.on('maximize', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) {
+        if (win.isMaximized()) win.unmaximize();
+        else win.maximize();
+    }
+});
+ipcMain.on('close', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) win.close();
+});
 
 ipcMain.handle('get-app-version', () => {
     return app.getVersion();
+});
+
+ipcMain.handle('open-detached-window', (event, appId) => {
+    const iconPath = process.platform === 'win32'
+        ? path.join(__dirname, '../../assets/logo.ico')
+        : path.join(__dirname, '../../assets/logo1.png');
+
+    // Reuse preload logic or simplify
+    let preloadPath = path.resolve(__dirname, '../preload/preload.js');
+    if (!require('fs').existsSync(preloadPath)) {
+        preloadPath = path.resolve(app.getAppPath(), 'src/preload/preload.js');
+    }
+
+    const newWindow = new BrowserWindow({
+        width: 1000,
+        height: 700,
+        backgroundColor: '#0f172a',
+        icon: iconPath,
+        webPreferences: {
+            preload: preloadPath,
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: false,
+            webSecurity: false,
+            webviewTag: true // Enable webview tag for GridPrompt
+        },
+        frame: false,
+        titleBarStyle: 'hidden',
+        trafficLightPosition: { x: -100, y: -100 }, // Hide default traffic light controls
+        // Let's keep it consistent with main window for now, but user might want controls.
+        // The implementation plan says "similar config".
+    });
+
+    const isDev = process.env.NODE_ENV === 'development';
+    const cleanAppId = appId || 'launcher';
+
+    // Construct URL with param
+    if (isDev) {
+        newWindow.loadURL(`http://localhost:5173?app=${cleanAppId}`);
+    } else {
+        // For file protocol, we append query params
+        // But loadFile doesn't support query params easily in Electron.
+        // We usually loadURL('file://.../index.html?app=...')
+        const indexPath = path.join(__dirname, '../../dist/index.html');
+        newWindow.loadURL(`file://${indexPath}?app=${cleanAppId}`);
+    }
+
+    return { success: true };
 });
 
 // Helper to get profiles path based on OS
