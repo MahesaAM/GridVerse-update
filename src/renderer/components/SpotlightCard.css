@@ -1,0 +1,44 @@
+.card-spotlight {
+    position: relative;
+    border-radius: 1.5rem;
+    border: 1px solid #222;
+    background-color: #0f0f11;
+    padding: 2rem;
+    overflow: hidden;
+    --mouse-x: 50%;
+    --mouse-y: 50%;
+    --spotlight-color: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    /* Added for clickable feel since it replaces buttons */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-spotlight:hover {
+    transform: scale(1.02);
+}
+
+.card-spotlight::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), var(--spotlight-color), transparent 80%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 1;
+    /* Ensure spotlight effect is above content background but below content if needed */
+}
+
+.card-spotlight:hover::before,
+.card-spotlight:focus-within::before {
+    opacity: 0.6;
+}
+
+/* Ensure content sits above the spotlight effect */
+.card-spotlight>* {
+    position: relative;
+    z-index: 2;
+}

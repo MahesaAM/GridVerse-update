@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .bg-radial-gradient {
+    background: radial-gradient(circle at 50% 120%, #e600ff 0%, #4b0082 30%, #000000 100%);
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
+  }
+
+  .shiny-text {
+    background: linear-gradient(90deg,
+        #c084fc 0%,
+        #ffffff 50%,
+        #c084fc 100%);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+  }
+
+  .shiny-text-yellow {
+    background: linear-gradient(90deg,
+        #eab308 0%,
+        #ffffff 50%,
+        #eab308 100%);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shimmer 3s linear infinite;
+  }
+
+  @keyframes sparkle {
+
+    0%,
+    100% {
+      opacity: 0;
+      transform: scale(0.5);
+      filter: drop-shadow(0 0 2px #e600ff);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+      filter: drop-shadow(0 0 6px #e600ff);
+    }
+  }
+
+  .sparkle {
+    position: absolute;
+    background: #e600ff;
+    border-radius: 50%;
+    opacity: 0;
+    animation: sparkle 3s infinite;
+    filter: drop-shadow(0 0 4px #e600ff);
+  }
+
+  @keyframes liquidGradient {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .liquid-gradient-text {
+    background: linear-gradient(270deg, #bf7eff, #e0648f, #ffffff);
+    background-size: 600% 600%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: liquidGradient 6s ease infinite;
+    position: relative;
+    z-index: 10;
+  }
+
+  @keyframes fastGradient {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    100% {
+      background-position: 200% 50%;
+    }
+  }
+
+  .purple-button {
+    background: #e600ff;
+    color: white;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    transition: background-position 0.5s ease;
+  }
+
+  .purple-button:hover {
+    background: linear-gradient(270deg, #f9c2f9, #e600ff, #f9c2f9);
+    background-size: 200% 200%;
+    animation: fastGradient 0.8s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2.5s linear infinite;
+  }
+}
