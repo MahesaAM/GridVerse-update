@@ -26,7 +26,8 @@ Your goal is to maximize SEO and commercial conversion.
 - **Description**: Detailed and benefit-focused. Max ${descLength} words or ~150 characters.
   - Explain the mood, atmosphere, and potential commercial uses.
   - DO NOT mention technical file info (vector, SVG, JPG, etc.).
-- **Keywords**: Approximately ${kwCount} highly relevant single-word keywords.
+- **Keywords**: Generate exactly ${kwCount} highly relevant single-word keywords.
+  - Target range: 45-${kwCount} keywords. DO NOT EXCEED ${kwCount}.
   - NO compound words or phrases.
   - NO dashes or hyphens.
   - Prioritize search volume and buyer intent.
@@ -35,6 +36,7 @@ Your goal is to maximize SEO and commercial conversion.
 **CRITICAL RULES:**
 - NO reference to "image", "vector", "graphic", "illustration" unless it's the subject.
 - NO technical jargon about file formats.
+- STRICTLY LIMIT KEYWORDS TO ${kwCount}. DO NOT GENERATE MORE.
 - STRICTLY return raw JSON based on the structure below.
 
 Output MUST be valid JSON with this structure:
@@ -201,7 +203,10 @@ export const MetadataAI = {
                     ]
                 }
             ],
-            max_tokens: 1024
+            max_completion_tokens: 3000,
+            temperature: 1,
+            top_p: 1,
+            stop: null
         };
 
         const response = await fetch(url, {

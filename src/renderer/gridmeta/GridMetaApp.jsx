@@ -181,7 +181,7 @@ export default function GridMetaApp({ onBack }) {
                     type: file.type.startsWith('video') ? 'video' : 'image',
                     mimeType: file.type,
                     path: physicalPath || URL.createObjectURL(file), // Fallback to blob if no path
-                    preview: URL.createObjectURL(file),
+                    preview: physicalPath ? `file://${physicalPath}` : URL.createObjectURL(file), // Use file:// protocol
                     metadata: { title: '', description: '', keywords: '' }
                 };
             });
@@ -200,7 +200,7 @@ export default function GridMetaApp({ onBack }) {
                     type: file.type.startsWith('video') ? 'video' : 'image',
                     mimeType: file.type,
                     path: physicalPath || URL.createObjectURL(file),
-                    preview: URL.createObjectURL(file),
+                    preview: physicalPath ? `file://${physicalPath}` : URL.createObjectURL(file),
                     metadata: { title: '', description: '', keywords: '' }
                 };
             });
