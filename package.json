@@ -69,7 +69,11 @@
     "artifactName": "${productName}-Setup-${version}.${ext}",
     "compression": "store",
     "publish": [
-      "github"
+      {
+        "provider": "github",
+        "owner": "MahesaAM",
+        "repo": "GridVerse-update"
+      }
     ],
     "directories": {
       "output": "dist_installer"
