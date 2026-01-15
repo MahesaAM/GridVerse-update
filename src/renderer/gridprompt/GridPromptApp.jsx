@@ -59,7 +59,10 @@ export default function GridPromptApp({ onBack, onLogout }) {
         const filtered = rawImages.filter(img =>
             img.width >= settings.minImageWidth &&
             img.height >= settings.minImageHeight &&
-            !img.url.toLowerCase().endsWith('.gif') && // Exclude GIFs (spacers)
+            (!img.type || img.type === 'image') && // Exclude explicit non-image types
+            !img.url.toLowerCase().endsWith('.gif') && // Exclude GIFs
+            !img.url.toLowerCase().endsWith('.mp4') && // Exclude Videos
+            !img.url.toLowerCase().endsWith('.webm') &&
             !img.url.includes('spacer') // Explicitly exclude known spacer names
         ).slice(0, settings.maxImages);
 

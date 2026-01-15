@@ -16,17 +16,7 @@ export default function HistoryPage({ isOpen, onClose }) {
         }
     }, [isOpen]);
 
-    const clearHistory = () => {
-        if (confirm('Are you sure you want to clear all history?')) {
-            const saved = localStorage.getItem('gridprompt-settings');
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                parsed.history = [];
-                localStorage.setItem('gridprompt-settings', JSON.stringify(parsed));
-                setHistory([]);
-            }
-        }
-    };
+
 
     const handleCopy = async (text, id) => {
         try {
@@ -68,15 +58,7 @@ export default function HistoryPage({ isOpen, onClose }) {
                     Generation History
                 </h2>
                 <div className="flex items-center gap-2">
-                    {history.length > 0 && (
-                        <button
-                            onClick={clearHistory}
-                            className="px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-950/30 rounded-lg transition-colors flex items-center gap-2"
-                        >
-                            <Trash2 size={16} />
-                            Clear History
-                        </button>
-                    )}
+
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors"
