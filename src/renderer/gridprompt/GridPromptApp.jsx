@@ -535,6 +535,12 @@ export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) 
     // Toggle Sidebar
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+    const handleClearImages = () => {
+        setRawImages([]);
+        setImages([]);
+        setToast({ type: 'success', message: 'List cleared.' });
+    };
+
     return (
         <div className="h-full w-full bg-[#0a0a0f] text-slate-200 font-sans flex flex-col overflow-hidden relative selection:bg-blue-500/30">
 
@@ -732,6 +738,7 @@ export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) 
                             toast={toast}
                             onOpenSettings={() => setIsSettingsOpen(true)}
                             settings={settings}
+                            onClear={handleClearImages}
                         />
                     </div>
                 </div>

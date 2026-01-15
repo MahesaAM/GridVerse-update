@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, History, Globe, Image, Play, X, Download, Upload, StopCircle, Copy, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Settings, History, Globe, Image, Play, X, Download, Upload, StopCircle, Copy, Check, AlertCircle, Loader2, Trash2 } from 'lucide-react';
 
 export default function Sidebar({
     images,
@@ -14,7 +14,8 @@ export default function Sidebar({
     toast,
     settings,
     onUpdateSettings,
-    onOpenSettings
+    onOpenSettings,
+    onClear
 }) {
     const setLocalImages = onLocalImagesChange || (() => { });
 
@@ -183,14 +184,26 @@ export default function Sidebar({
                             )}
 
                             {!isProcessing ? (
-                                <button
-                                    onClick={onStartGeneration}
-                                    disabled={targetList.length === 0}
-                                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 active:scale-[0.98]"
-                                >
-                                    <Play size={16} fill="currentColor" />
-                                    Start Process
-                                </button>
+                                <>
+                                    <button
+                                        onClick={onStartGeneration}
+                                        disabled={targetList.length === 0}
+                                        className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 active:scale-[0.98]"
+                                        title="Start Generation"
+                                    >
+                                        <Play size={16} fill="currentColor" />
+                                        Start
+                                    </button>
+                                    {activeTab === 'web' && targetList.length > 0 && (
+                                        <button
+                                            onClick={onClear}
+                                            className="px-3 py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 rounded-lg transition-all flex items-center justify-center"
+                                            title="Clear List"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
+                                </>
                             ) : (
                                 <button
                                     onClick={onStopGeneration}
