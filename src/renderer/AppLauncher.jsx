@@ -56,6 +56,16 @@ const APPS = [
         gradient: 'from-orange-500 to-red-400',
         actionText: 'Launch Vector',
         spotlightColor: 'rgba(249, 115, 22, 0.25)' // Orange
+    },
+    {
+        id: 'gridtrends',
+        name: 'GridTrends',
+        description: 'Market Intelligence Engine.',
+        icon: Sparkles,
+        color: 'cyan',
+        gradient: 'from-cyan-500 to-blue-500',
+        actionText: 'Launch Trends',
+        spotlightColor: 'rgba(6, 182, 212, 0.25)' // Cyan
     }
 ];
 

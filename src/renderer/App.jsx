@@ -9,6 +9,7 @@ import GridBotApp from './gridbot/GridBotApp';
 import GridPromptApp from './gridprompt/GridPromptApp';
 import GridMetaApp from './gridmeta/GridMetaApp';
 import GridVectorApp from './gridvector/GridVectorApp';
+import GridTrendsApp from './gridtrends/GridTrendsApp';
 import BrowserLayout from './components/Browser/BrowserLayout';
 import WindowControls from './components/WindowControls';
 
@@ -183,6 +184,7 @@ export default function App() {
                 case 'gridbot': return <GridBotApp {...commonProps} />;
                 case 'gridprompt': return <GridPromptApp {...commonProps} />;
                 case 'gridmeta': return <GridMetaApp {...commonProps} />;
+                case 'gridtrends': return <GridTrendsApp {...commonProps} />;
                 case 'gridvector':
                     return (
                         <div style={{ height: '100vh', width: '100vw' }}>
@@ -201,6 +203,7 @@ export default function App() {
             'gridbot': 'GridBot',
             'gridprompt': 'GridPrompt',
             'gridmeta': 'GridMeta',
+            'gridtrends': 'GridTrends',
             'gridvector': 'GridVector'
         };
 

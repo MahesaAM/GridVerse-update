@@ -226,10 +226,9 @@
   optionalDependencies:
     global-agent "^3.0.0"
 
-"@electron/node-gyp@git+https://github.com/electron/node-gyp.git#06b29aafb7708acef8b3669835c8a7857ebc92d2":
+"@electron/node-gyp@https://github.com/electron/node-gyp#06b29aafb7708acef8b3669835c8a7857ebc92d2":
   version "10.2.0-electron.1"
-  resolved "git+https://github.com/electron/node-gyp.git#06b29aafb7708acef8b3669835c8a7857ebc92d2"
-  integrity sha512-4MSBTT8y07YUDqf69/vSh80Hh791epYqGtWHO3zSKhYFwQg+gx9wi1PqbqP6YqC4WMsNxZ5l9oDmnWdK5pfCKQ==
+  resolved "https://github.com/electron/node-gyp#06b29aafb7708acef8b3669835c8a7857ebc92d2"
   dependencies:
     env-paths "^2.2.0"
     exponential-backoff "^3.1.1"
@@ -2705,6 +2704,11 @@ globalthis@^1.0.1:
   dependencies:
     define-properties "^1.2.1"
     gopd "^1.0.1"
+
+google-trends-api@^4.9.2:
+  version "4.9.2"
+  resolved "https://registry.yarnpkg.com/google-trends-api/-/google-trends-api-4.9.2.tgz#77941d5632b58e50f1e34e63923757bf5b81d17b"
+  integrity sha512-gjVSHCM8B7LyAAUpXb4B0/TfnmpwQ2z1w/mQ2bL0AKpr2j3gLS1j2YOnifpfsGJRxAGXB/NoC+nGwC5qSnZIiA==
 
 gopd@^1.0.1, gopd@^1.2.0:
   version "1.2.0"

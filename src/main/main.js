@@ -14,6 +14,9 @@ const fsPromises = fs.promises;
 
 // GridVector Config
 const { CONFIG } = require('./config-electron');
+const trendsService = require('./gridtrends/trendsService');
+const stockScraper = require('./gridtrends/stockScraper');
+const aiService = require('./gridtrends/aiService');
 // Load persistent config
 const VECTORIZER_CONFIG_PATH = path.join(app.getPath('userData'), 'vectorizer-config.json');
 try {
@@ -499,7 +502,33 @@ ipcMain.on('stop-automation', () => {
     }
 });
 
-// --- GridVector IPC ---
+// GridVector IPC
+
+ipcMain.handle('gridtrends:get-trends', async (event, geo) => {
+    return await trendsService.getDailyTrends(geo);
+});
+
+ipcMain.handle('gridtrends:get-stock-trends', async () => {
+    return await stockScraper.getCombinedTrends();
+});
+
+ipcMain.handle('gridtrends:analyze-trends', async (event, { trends, apiKey, model }) => {
+    return await aiService.analyzeTrends(trends, apiKey, model);
+});
+
+ipcMain.handle('gridtrends:predict-trends', async (event, { trends, apiKey }) => {
+    return await aiService.predictTrends(trends, apiKey);
+});
+
+ipcMain.handle('gridtrends:generate-prompts', async (event, { topic, style, count, apiKey }) => {
+    return await aiService.generatePrompts(topic, style, count, apiKey);
+});
+
+// Deprecated or Proxy
+ipcMain.handle('gridtrends:get-best-sellers', async () => {
+    return await stockScraper.getCombinedTrends();
+});
+
 ipcMain.handle("check-config", async () => {
     return { success: true, cookieConfig: CONFIG.COOKIE_CONFIG, httpHeaders: CONFIG.HTTP_HEADERS };
 });

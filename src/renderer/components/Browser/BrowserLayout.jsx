@@ -8,6 +8,7 @@ import GridBotApp from '../../gridbot/GridBotApp';
 import GridPromptApp from '../../gridprompt/GridPromptApp';
 import GridMetaApp from '../../gridmeta/GridMetaApp';
 import GridVectorApp from '../../gridvector/GridVectorApp';
+import GridTrendsApp from '../../gridtrends/GridTrendsApp';
 
 import { HashRouter } from 'react-router-dom';
 
@@ -86,6 +87,7 @@ const BrowserLayout = ({ onLogout, appVersion, expirationDate }) => {
             'gridbot': { title: 'GridBot', type: 'gridbot' },
             'gridprompt': { title: 'GridPrompt', type: 'gridprompt' },
             'gridmeta': { title: 'GridMeta', type: 'gridmeta' },
+            'gridtrends': { title: 'GridTrends', type: 'gridtrends' },
             'gridvector': { title: 'GridVector', type: 'gridvector' },
             'launcher': { title: 'New Tab', type: 'launcher' }
         };
@@ -150,6 +152,9 @@ const BrowserLayout = ({ onLogout, appVersion, expirationDate }) => {
                 break;
             case 'gridmeta':
                 content = <GridMetaApp {...commonProps} />;
+                break;
+            case 'gridtrends':
+                content = <GridTrendsApp {...commonProps} />;
                 break;
             case 'gridvector':
                 // GridVector might use HashRouter internally. 
