@@ -93,7 +93,7 @@ const UpdateNotification = ({ isManualCheck, onCheckComplete }) => {
                         </svg>
                     </div>
                     <h2 className="text-lg font-bold text-white mb-1">You're all set!</h2>
-                    <p className="text-slate-400 text-sm mb-4">You are using the latest version of GridVid.</p>
+                    <p className="text-slate-400 text-sm mb-4">You are using the latest version of GridVerse.</p>
                     <button
                         onClick={() => setUpToDate(false)}
                         className="px-6 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-colors text-sm"
@@ -114,7 +114,7 @@ const UpdateNotification = ({ isManualCheck, onCheckComplete }) => {
                     <div>
                         <h2 className="text-xl font-bold text-white mb-1">Update Available!</h2>
                         <p className="text-slate-400 text-sm">
-                            A new version of GridVid is ready.
+                            A new version of GridVerse is ready.
                         </p>
                     </div>
                     <div className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-xs font-bold font-mono">

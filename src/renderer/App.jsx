@@ -78,7 +78,7 @@ export default function App() {
                     const session = JSON.parse(storedUser);
                     // Check against database
                     const { data, error } = await supabase
-                        .from('users_veo')
+                        .from('users_gridverse')
                         .select('*')
                         .eq('username', session.username)
                         .single();
@@ -207,7 +207,7 @@ export default function App() {
             'gridvector': 'GridVector'
         };
 
-        const title = appTitleMap[detachedApp] || 'GridVerse App';
+        const title = appTitleMap[detachedApp] || 'GridVerse';
 
         return (
             <ErrorBoundary>

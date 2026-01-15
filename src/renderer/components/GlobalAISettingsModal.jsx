@@ -3,7 +3,7 @@ import { X, Key, Cpu, Zap, Settings, Save, Sparkles } from 'lucide-react';
 
 export default function GlobalAISettingsModal({ isOpen, onClose, onSave }) {
     const [config, setConfig] = useState({
-        provider: 'gemini', // 'gemini' | 'gpt' | 'ollama' | 'groq'
+        provider: 'groq', // 'gemini' | 'gpt' | 'ollama' | 'groq'
         apiKey: '',
         model: '',
         endpoint: 'http://localhost:11434'

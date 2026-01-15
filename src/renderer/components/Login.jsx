@@ -63,7 +63,7 @@ export default function Login({ onLoginSuccess }) {
             }
 
             const { data, error: dbError } = await supabase
-                .from('users_veo')
+                .from('users_gridverse')
                 .select('*')
                 .eq('username', username)
                 .eq('password', password)
@@ -93,7 +93,7 @@ export default function Login({ onLoginSuccess }) {
 
             if (!data.deviceId) {
                 await supabase
-                    .from('users_veo')
+                    .from('users_gridverse')
                     .update({ deviceId: deviceId })
                     .eq('username', username);
             }
@@ -136,7 +136,7 @@ export default function Login({ onLoginSuccess }) {
             <div className="relative z-10 bg-black/80 border border-white/10 rounded-3xl backdrop-blur-2xl p-10 max-w-md w-full shadow-2xl animate-fadeInUp no-drag">
                 <div className="flex flex-col items-center mb-8 gap-3">
                     <div className="w-20 h-auto flex items-center justify-center p-2 bg-white/5 rounded-2xl border border-white/5 shadow-inner">
-                        <img src={logo} alt="GridVid Logo" className="w-full h-full object-contain drop-shadow-lg" />
+                        <img src={logo} alt="GridVerse Logo" className="w-full h-full object-contain drop-shadow-lg" />
                     </div>
                     <h2 className="text-xl font-bold text-white tracking-wide mt-2">GRIDVERSE</h2>
                     <p className="text-gray-400 text-[11px] font-medium tracking-wider uppercase">Sign in to continue</p>

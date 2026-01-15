@@ -1,5 +1,5 @@
 {
-  "name": "gridvid",
+  "name": "gridverse",
   "version": "3.4.4",
   "description": "Browser automation bot with React UI",
   "main": "src/main/main.js",
@@ -65,7 +65,7 @@
     "xlsx": "^0.18.5"
   },
   "build": {
-    "productName": "GridVid",
+    "productName": "GridVerse",
     "artifactName": "${productName}-Setup-${version}.${ext}",
     "compression": "store",
     "publish": [
@@ -95,7 +95,7 @@
     "nsis": {
       "oneClick": false,
       "perMachine": true,
-      "guid": "GridVid-Reborn-Official-Unique-ID",
+      "guid": "GridVerse-Official-Unique-ID",
       "allowToChangeInstallationDirectory": true,
       "createStartMenuShortcut": true,
       "deleteAppDataOnUninstall": true
