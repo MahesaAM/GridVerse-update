@@ -132,7 +132,7 @@ const ProcessingCard = ({
     );
 };
 
-function App({ onBack, onLogout }) {
+function App({ onBack, onLogout, onProcessingChange }) {
 
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [isConverting, setIsConverting] = useState(false);
@@ -474,6 +474,7 @@ function App({ onBack, onLogout }) {
 
     const runBatchQueue = async () => {
         setIsConverting(true);
+        if (onProcessingChange) onProcessingChange(true);
         setStopRequested(false);
         stopRequestedRef.current = false;
         setIsStopped(false);
@@ -585,6 +586,7 @@ function App({ onBack, onLogout }) {
         }
 
         setIsConverting(false);
+        if (onProcessingChange) onProcessingChange(false);
         setIsStopped(stopRequestedRef.current);
         showToast(stopRequestedRef.current ? "Queue stopped." : "Queue finished.", "info");
     };
@@ -604,6 +606,7 @@ function App({ onBack, onLogout }) {
     const stopBatch = () => {
         setStopRequested(true);
         stopRequestedRef.current = true;
+        if (onProcessingChange) onProcessingChange(false);
         // Close WS if active (might not catch all workers immediately but flag stops them)
         if (wsRef.current?.readyState === WebSocket.OPEN) {
             wsRef.current.close();

@@ -5,7 +5,7 @@ import gridverseLogo from '../assets/gridverse.png'; // Import Logo
 import SettingsModal from './components/SettingsModal';
 import { MetadataAI } from './services/MetadataAI';
 
-export default function GridMetaApp({ onBack }) {
+export default function GridMetaApp({ onBack, onProcessingChange }) {
     const [files, setFiles] = useState([]);
     const [selectedFileId, setSelectedFileId] = useState(null);
     const [dragActive, setDragActive] = useState(false);
@@ -63,6 +63,7 @@ export default function GridMetaApp({ onBack }) {
     };
 
     const handleBatchGeneration = async (config) => {
+        if (onProcessingChange) onProcessingChange(true);
         const queue = files;
 
         for (const file of queue) {
@@ -152,6 +153,7 @@ export default function GridMetaApp({ onBack }) {
         if (!stopBatchRef.current) {
             setToast({ type: 'success', message: 'Batch Complete!' });
         }
+        if (onProcessingChange) onProcessingChange(false);
     };
 
     // Drag Handling

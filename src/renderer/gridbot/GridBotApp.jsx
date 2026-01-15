@@ -40,7 +40,7 @@ class ErrorBoundary extends React.Component {
     }
 }
 
-export default function GridBotApp({ onBack, onLogout }) {
+export default function GridBotApp({ onBack, onLogout, onProcessingChange }) {
     const [activeTab, setActiveTab] = useState('imagefx'); // 'imagefx' | 'whisk'
 
     // Mock Window Controls for consistency if needed, or pass handleExit
@@ -94,10 +94,10 @@ export default function GridBotApp({ onBack, onLogout }) {
                 <div className="flex-1 bg-slate-900 border border-white/5 relative z-0 shadow-2xl overflow-hidden flex flex-col backdrop-blur-sm">
                     <div className="flex-1 overflow-hidden p-0">
                         <div style={{ display: activeTab === 'imagefx' ? 'block' : 'none', height: '100%', width: '100%' }}>
-                            <ImageGenerator onBack={onBack} onLogout={onLogout} />
+                            <ImageGenerator onBack={onBack} onLogout={onLogout} onProcessingChange={onProcessingChange} />
                         </div>
                         <div style={{ display: activeTab === 'whisk' ? 'block' : 'none', height: '100%', width: '100%' }}>
-                            <WhiskGenerator onBack={onBack} onLogout={onLogout} />
+                            <WhiskGenerator onBack={onBack} onLogout={onLogout} onProcessingChange={onProcessingChange} />
                         </div>
                     </div>
                 </div>

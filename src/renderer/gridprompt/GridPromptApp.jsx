@@ -4,7 +4,7 @@ import Sidebar from './components/Sidebar';
 import SettingsModal from './components/SettingsModal';
 import HistoryPage from './components/HistoryPage';
 
-export default function GridPromptApp({ onBack, onLogout }) {
+export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) {
     const [url, setUrl] = useState('https://stock.adobe.com/search?k=cyberpunk'); // Default to a useful site for scraping
     const [inputUrl, setInputUrl] = useState('https://stock.adobe.com/search?k=cyberpunk');
     const [isLoading, setIsLoading] = useState(false);
@@ -122,6 +122,7 @@ export default function GridPromptApp({ onBack, onLogout }) {
         }
 
         setIsProcessing(true);
+        if (onProcessingChange) onProcessingChange(true);
         processingRef.current = true;
         setProcessingStatus('Initializing...');
 
@@ -241,6 +242,7 @@ export default function GridPromptApp({ onBack, onLogout }) {
 
         setProcessingStatus(null);
         setIsProcessing(false);
+        if (onProcessingChange) onProcessingChange(false);
         processingRef.current = false;
 
         // Save to history (Real)
@@ -266,6 +268,7 @@ export default function GridPromptApp({ onBack, onLogout }) {
 
     const handleStopGeneration = () => {
         setIsProcessing(false);
+        if (onProcessingChange) onProcessingChange(false);
         processingRef.current = false;
         setProcessingStatus('Stopped.');
         setToast({ type: 'info', message: 'Generation Stopped.' });
@@ -524,6 +527,7 @@ export default function GridPromptApp({ onBack, onLogout }) {
                 webview.removeEventListener('ipc-message', handleIpcMessage);
                 webview.removeEventListener('console-message', handleConsoleMessage);
             }
+            if (onProcessingChange) onProcessingChange(false);
         };
     }, []);
 

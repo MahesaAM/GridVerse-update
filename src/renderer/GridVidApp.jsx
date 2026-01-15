@@ -14,7 +14,7 @@ function cn(...inputs) {
 // - onLogout: function to handle logout
 // - appVersion: string
 // - expirationDate: string or null
-export default function GridVidApp({ onLogout, onBack, appVersion, expirationDate }) {
+export default function GridVidApp({ onLogout, onBack, appVersion, expirationDate, onProcessingChange }) {
     const [activeTab, setActiveTab] = useState('generator'); // 'generator' | 'accounts'
     const [generatorMode, setGeneratorMode] = useState('text'); // 'text' | 'image'
     const [status, setStatus] = useState('stopped');
@@ -69,9 +69,16 @@ export default function GridVidApp({ onLogout, onBack, appVersion, expirationDat
 
     useEffect(() => {
         if (window.api) {
-            window.api.receive('automation-status', (s) => setStatus(s));
+            window.api.receive('automation-status', (s) => {
+                setStatus(s);
+                // Assume safe to detach only if stopped or idle, adjust based on actual status values
+                if (onProcessingChange) {
+                    const isBusy = s !== 'stopped' && s !== 'idle';
+                    onProcessingChange(isBusy);
+                }
+            });
         }
-    }, []);
+    }, [onProcessingChange]);
 
     const handleExit = () => {
         if (window.api) window.api.send('close');

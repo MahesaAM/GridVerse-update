@@ -14,6 +14,14 @@ import { HashRouter } from 'react-router-dom';
 const BrowserLayout = ({ onLogout, appVersion, expirationDate }) => {
     const [tabs, setTabs] = useState([]);
     const [activeTabId, setActiveTabId] = useState(null);
+    const [processingStates, setProcessingStates] = useState({}); // { tabId: boolean }
+
+    const handleProcessingChange = (tabId, isProcessing) => {
+        setProcessingStates(prev => ({
+            ...prev,
+            [tabId]: isProcessing
+        }));
+    };
 
     // Initialize with one empty tab
     useEffect(() => {
@@ -108,7 +116,8 @@ const BrowserLayout = ({ onLogout, appVersion, expirationDate }) => {
             // Note: onLogout passed from top level might need to log out the WHOLE app, not just tab.
             // AppLauncher has logout. Other apps usually just have "Back". 
             // If they have logout, it should probably logout the session.
-            onLogout: onLogout
+            onLogout: onLogout,
+            onProcessingChange: (isProcessing) => handleProcessingChange(tab.id, isProcessing)
         };
 
         let content = null;
@@ -181,6 +190,7 @@ const BrowserLayout = ({ onLogout, appVersion, expirationDate }) => {
             <TabBar
                 tabs={tabs}
                 activeTabId={activeTabId}
+                processingStates={processingStates}
                 onTabClick={setActiveTabId}
                 onTabClose={closeTab}
                 onNewTab={createNewTab}

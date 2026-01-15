@@ -3,7 +3,7 @@ import Tab from './Tab';
 import { Plus, Home, ExternalLink } from 'lucide-react';
 import WindowControls from '../WindowControls';
 
-const TabBar = ({ tabs, activeTabId, onTabClick, onTabClose, onNewTab, onHome }) => {
+const TabBar = ({ tabs, activeTabId, onTabClick, onTabClose, onNewTab, onHome, processingStates = {} }) => {
     const scrollContainerRef = useRef(null);
 
     // Auto-scroll to active tab
@@ -54,17 +54,22 @@ const TabBar = ({ tabs, activeTabId, onTabClick, onTabClose, onNewTab, onHome })
                 {(() => {
                     const activeTab = tabs.find(t => t.id === activeTabId);
                     if (activeTab && activeTab.component !== 'launcher') {
+                        const isProcessing = processingStates[activeTabId];
                         return (
                             <button
+                                disabled={isProcessing}
                                 onClick={() => {
-                                    if (window.api && window.api.openDetachedWindow) {
+                                    if (window.api && window.api.openDetachedWindow && !isProcessing) {
                                         window.api.openDetachedWindow(activeTab.component);
                                         // Close tab after detaching as requested
                                         onTabClose(activeTabId);
                                     }
                                 }}
-                                className="w-10 h-full flex items-center justify-center text-gray-500 hover:text-blue-400 hover:bg-white/5 transition-colors"
-                                title="Detach Tab"
+                                className={`w-10 h-full flex items-center justify-center transition-colors ${isProcessing
+                                    ? 'text-gray-700 cursor-not-allowed opacity-50'
+                                    : 'text-gray-500 hover:text-blue-400 hover:bg-white/5'
+                                    }`}
+                                title={isProcessing ? "Cannot detach while processing" : "Detach Tab"}
                             >
                                 <ExternalLink className="w-4 h-4" />
                             </button>

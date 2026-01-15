@@ -109,7 +109,7 @@ const LogRow = memo(({ index, log, downloadImage, retryPrompt }) => {
   );
 });
 
-export default function WhiskGenerator({ onBack, onLogout }) {
+export default function WhiskGenerator({ onBack, onLogout, onProcessingChange }) {
   // Sidebar states
   const [prompts, setPrompts] = useState("");
   const [originalPrompts, setOriginalPrompts] = useState([]);
@@ -211,6 +211,7 @@ export default function WhiskGenerator({ onBack, onLogout }) {
       }
 
       setIsGenerating(true);
+      if (onProcessingChange) onProcessingChange(true);
       cancelRef.current = false;
 
       for (let i = 0; i < lines.length; i++) {
@@ -323,12 +324,14 @@ export default function WhiskGenerator({ onBack, onLogout }) {
           ) {
             alert(message);
             setIsGenerating(false);
+            if (onProcessingChange) onProcessingChange(false);
             return;
           }
         }
       }
 
       setIsGenerating(false);
+      if (onProcessingChange) onProcessingChange(false);
       setAbortController(null);
       setLogs(l => [
         ...l,
@@ -369,6 +372,7 @@ export default function WhiskGenerator({ onBack, onLogout }) {
       cancelRef.current = true;
       abortController?.abort();
       setIsGenerating(false);
+      if (onProcessingChange) onProcessingChange(false);
       return;
     }
     const lines = prompts
@@ -552,6 +556,7 @@ export default function WhiskGenerator({ onBack, onLogout }) {
                 cancelRef.current = true;
                 abortController?.abort();
                 setIsGenerating(false);
+                if (onProcessingChange) onProcessingChange(false);
               }}
               className="w-full h-8 text-xs font-semibold uppercase tracking-wide rounded bg-red-900/20 text-red-400 border border-red-900/50 hover:bg-red-900/40 transition-colors"
             >
