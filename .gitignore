@@ -13,3 +13,4 @@ profiles/
 *.har
 curl.txt
 secrets.json
+browsers_mac/
