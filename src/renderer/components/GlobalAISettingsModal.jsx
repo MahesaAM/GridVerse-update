@@ -48,23 +48,31 @@ export default function GlobalAISettingsModal({ isOpen, onClose, onSave }) {
                     {/* Provider Selection */}
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">AI Provider</label>
+                        {/* Provider Tabs */}
                         <div className="grid grid-cols-4 gap-2">
-                            {['gemini', 'gpt', 'ollama', 'groq'].map(p => (
+                            {['groq', 'gemini', 'gpt', 'ollama'].map(p => (
                                 <button
                                     key={p}
-                                    onClick={() => handleChange('provider', p)}
+                                    onClick={() => {
+                                        const updates = { provider: p };
+                                        // Auto-set default model for GridAI (groq)
+                                        if (p === 'groq') {
+                                            updates.model = 'meta-llama/llama-4-scout-17b-16e-instruct';
+                                        }
+                                        setConfig(prev => ({ ...prev, ...updates }));
+                                    }}
                                     className={`py-2 px-3 rounded-lg border text-sm font-medium capitalize transition-all ${config.provider === p
                                         ? 'bg-purple-600/20 border-purple-500 text-purple-400'
                                         : 'bg-[#18181b] border-white/5 text-slate-400 hover:border-white/20'
                                         }`}
                                 >
-                                    {p}
+                                    {p === 'groq' ? 'GridAI' : p}
                                 </button>
                             ))}
                         </div>
                     </div>
 
-                    {/* API Key (Gemini/GPT/Groq) */}
+                    {/* API Key (Gemini/GPT Only) */}
                     {(config.provider === 'gemini' || config.provider === 'gpt') && (
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
@@ -80,11 +88,16 @@ export default function GlobalAISettingsModal({ isOpen, onClose, onSave }) {
                         </div>
                     )}
 
-                    {/* Groq Info Message */}
+                    {/* Groq / GridAI Info Message */}
                     {config.provider === 'groq' && (
-                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs text-emerald-400 flex flex-col gap-1">
-                            <span className="font-bold flex items-center gap-1"><Sparkles size={12} /> Managed API Keys</span>
-                            <span className="opacity-80">GridVerse automatically manages high-performance keys for Groq. No manual input required.</span>
+                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-left">
+                            <h3 className="text-emerald-400 font-bold flex items-center gap-2 mb-1">
+                                <Sparkles size={16} />
+                                GridAI
+                            </h3>
+                            <p className="text-xs text-emerald-400/80 leading-relaxed">
+                                Experience Unlimited AI Generation with GridAI from GridVerse
+                            </p>
                         </div>
                     )}
 
@@ -104,51 +117,47 @@ export default function GlobalAISettingsModal({ isOpen, onClose, onSave }) {
                         </div>
                     )}
 
-                    {/* Model Name */}
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            <Cpu size={12} /> Model Name
-                        </label>
-                        <select
-                            value={config.model}
-                            onChange={(e) => handleChange('model', e.target.value)}
-                            className="w-full bg-[#18181b] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50 appearance-none"
-                        >
-                            <option value="">Default / Recommended</option>
-                            {config.provider === 'gemini' && (
-                                <>
-                                    <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended)</option>
-                                    <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp (Experimental)</option>
-                                    <option value="gemini-2.0-pro-exp">gemini-2.0-pro-exp (High Quality)</option>
-                                </>
-                            )}
-                            {config.provider === 'gpt' && (
-                                <>
-                                    <option value="gpt-4o">gpt-4o (Best for Vision)</option>
-                                    <option value="gpt-4o-mini">gpt-4o-mini (Fast & Cheap)</option>
-                                    <option value="gpt-4-turbo">gpt-4-turbo (Legacy High Quality)</option>
-                                    <option value="gpt-4-vision-preview">gpt-4-vision-preview</option>
-                                </>
-                            )}
-                            {config.provider === 'groq' && (
-                                <>
-                                    <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout 17b (Recommended)</option>
-                                    <option value="meta-llama/llama-4-maverick-17b-128e-instruct">Llama 4 Maverick 17b</option>
-                                </>
-                            )}
-                            {config.provider === 'ollama' && (
-                                <>
-                                    <option value="llama3.2-vision">llama3.2-vision (Best Open Source)</option>
-                                    <option value="llava">llava (Standard)</option>
-                                    <option value="moondream">moondream (Very Fast)</option>
-                                    <option value="bakllava">bakllava</option>
-                                    <option value="minicpm-v">minicpm-v (High Detail)</option>
-                                    <option value="llava-phi3">llava-phi3 (Efficient)</option>
-                                </>
-                            )}
-                        </select>
-                        <p className="text-[10px] text-slate-600">Select the model best suited for your needs.</p>
-                    </div>
+                    {/* Model Name (Hidden for GridAI/Groq) */}
+                    {config.provider !== 'groq' && (
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                <Cpu size={12} /> Model Name
+                            </label>
+                            <select
+                                value={config.model}
+                                onChange={(e) => handleChange('model', e.target.value)}
+                                className="w-full bg-[#18181b] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500/50 appearance-none"
+                            >
+                                <option value="">Default / Recommended</option>
+                                {config.provider === 'gemini' && (
+                                    <>
+                                        <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended)</option>
+                                        <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp (Experimental)</option>
+                                        <option value="gemini-2.0-pro-exp">gemini-2.0-pro-exp (High Quality)</option>
+                                    </>
+                                )}
+                                {config.provider === 'gpt' && (
+                                    <>
+                                        <option value="gpt-4o">gpt-4o (Best for Vision)</option>
+                                        <option value="gpt-4o-mini">gpt-4o-mini (Fast & Cheap)</option>
+                                        <option value="gpt-4-turbo">gpt-4-turbo (Legacy High Quality)</option>
+                                        <option value="gpt-4-vision-preview">gpt-4-vision-preview</option>
+                                    </>
+                                )}
+                                {config.provider === 'ollama' && (
+                                    <>
+                                        <option value="llama3.2-vision">llama3.2-vision (Best Open Source)</option>
+                                        <option value="llava">llava (Standard)</option>
+                                        <option value="moondream">moondream (Very Fast)</option>
+                                        <option value="bakllava">bakllava</option>
+                                        <option value="minicpm-v">minicpm-v (High Detail)</option>
+                                        <option value="llava-phi3">llava-phi3 (Efficient)</option>
+                                    </>
+                                )}
+                            </select>
+                            <p className="text-[10px] text-slate-600">Select the model best suited for your needs.</p>
+                        </div>
+                    )}
                 </div>
 
                 <div className="pt-2">
@@ -161,7 +170,7 @@ export default function GlobalAISettingsModal({ isOpen, onClose, onSave }) {
                     </button>
                 </div>
 
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

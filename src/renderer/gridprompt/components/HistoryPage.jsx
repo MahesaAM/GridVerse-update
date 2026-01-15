@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, History, Trash2, ChevronDown, ChevronRight, Clock, Copy, Check, Clipboard } from 'lucide-react';
+import { X, History, ChevronDown, ChevronRight, Clock, Copy, Check, Clipboard } from 'lucide-react';
 
 export default function HistoryPage({ isOpen, onClose }) {
     const [history, setHistory] = useState([]);
