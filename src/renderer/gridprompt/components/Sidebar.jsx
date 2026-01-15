@@ -226,8 +226,8 @@ export default function Sidebar({
                     onClick={() => {
                         const texts = targetList
                             .filter(i => i.generatedPrompt)
-                            .map(i => `[Image: ${i.url}]\nPrompt: ${i.generatedPrompt}`)
-                            .join('\n\n---\n\n');
+                            .map(i => i.generatedPrompt)
+                            .join('\n\n');
 
                         if (!texts) {
                             alert('No generated prompts to download.');

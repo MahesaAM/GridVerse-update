@@ -3,6 +3,7 @@ import { RefreshCw, Globe, X, ChevronLeft, ChevronRight, History, Settings, Imag
 import Sidebar from './components/Sidebar';
 import SettingsModal from './components/SettingsModal';
 import HistoryPage from './components/HistoryPage';
+import BatchGenerator from './components/BatchGenerator';
 
 export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) {
     const [url, setUrl] = useState('https://stock.adobe.com/search?k=cyberpunk'); // Default to a useful site for scraping
@@ -645,85 +646,96 @@ export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) 
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex overflow-hidden relative z-10 border border-white/5 bg-black/50 backdrop-blur-sm shadow-2xl">
-                {/* WebView Container */}
-                <div className="flex-1 flex flex-col relative overflow-hidden bg-[#ffffff]">
+            {activeTab === 'local' ? (
+                <BatchGenerator
+                    files={localImages}
+                    onFilesChange={setLocalImages}
+                    onStart={handleStartGeneration}
+                    onStop={handleStopGeneration}
+                    isProcessing={isProcessing}
+                    processingStatus={processingStatus}
+                />
+            ) : (
+                <div className="flex-1 flex overflow-hidden relative z-10 border border-white/5 bg-black/50 backdrop-blur-sm shadow-2xl">
+                    {/* WebView Container */}
+                    <div className="flex-1 flex flex-col relative overflow-hidden bg-[#ffffff]">
 
-                    {/* BROWSER TOOLBAR (New Location above Webview) */}
-                    <div className="flex items-center gap-2 p-2 bg-[#f0f0f0] border-b border-gray-200">
-                        {/* Nav Buttons */}
-                        <div className="flex items-center gap-1">
-                            <button
-                                onClick={handleGoBack}
-                                disabled={!canGoBack}
-                                className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 text-gray-500 hover:text-gray-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-                            <button
-                                onClick={handleGoForward}
-                                disabled={!canGoForward}
-                                className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 text-gray-500 hover:text-gray-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                            <button
-                                onClick={handleReload}
-                                className={`w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 text-gray-500 hover:text-gray-800 transition-colors ${isLoading ? 'animate-spin' : ''}`}
-                            >
-                                <RefreshCw size={16} />
-                            </button>
+                        {/* BROWSER TOOLBAR (New Location above Webview) */}
+                        <div className="flex items-center gap-2 p-2 bg-[#f0f0f0] border-b border-gray-200">
+                            {/* Nav Buttons */}
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={handleGoBack}
+                                    disabled={!canGoBack}
+                                    className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 text-gray-500 hover:text-gray-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                >
+                                    <ChevronLeft size={18} />
+                                </button>
+                                <button
+                                    onClick={handleGoForward}
+                                    disabled={!canGoForward}
+                                    className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 text-gray-500 hover:text-gray-800 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                                >
+                                    <ChevronRight size={18} />
+                                </button>
+                                <button
+                                    onClick={handleReload}
+                                    className={`w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 text-gray-500 hover:text-gray-800 transition-colors ${isLoading ? 'animate-spin' : ''}`}
+                                >
+                                    <RefreshCw size={16} />
+                                </button>
+                            </div>
+
+                            {/* URL Bar */}
+                            <form onSubmit={handleNavigate} className="flex-1 flex items-center gap-2 bg-white rounded-md px-3 py-1.5 border border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/50 transition-all shadow-sm">
+                                <Globe size={14} className="text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={inputUrl}
+                                    onChange={(e) => setInputUrl(e.target.value)}
+                                    onFocus={(e) => e.target.select()}
+                                    className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 placeholder:text-gray-400 font-normal"
+                                    placeholder="Enter URL..."
+                                />
+                            </form>
                         </div>
 
-                        {/* URL Bar */}
-                        <form onSubmit={handleNavigate} className="flex-1 flex items-center gap-2 bg-white rounded-md px-3 py-1.5 border border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/50 transition-all shadow-sm">
-                            <Globe size={14} className="text-gray-400" />
-                            <input
-                                type="text"
-                                value={inputUrl}
-                                onChange={(e) => setInputUrl(e.target.value)}
-                                onFocus={(e) => e.target.select()}
-                                className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 placeholder:text-gray-400 font-normal"
-                                placeholder="Enter URL..."
+                        <div className="flex-1 relative">
+                            <webview
+                                ref={webviewRef}
+                                src={url}
+                                className="w-full h-full"
+                                webpreferences="contextIsolation=false, nodeIntegration=true"
+                                allowpopups="true"
                             />
-                        </form>
+                            {/* Loading Overlay */}
+                            {isLoading && (
+                                <div className="absolute top-0 left-0 w-full h-0.5 bg-transparent z-20">
+                                    <div className="h-full bg-blue-500 animate-[loading_1s_ease-in-out_infinite]" style={{ width: '30%' }}></div>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    <div className="flex-1 relative">
-                        <webview
-                            ref={webviewRef}
-                            src={url}
-                            className="w-full h-full"
-                            webpreferences="contextIsolation=false, nodeIntegration=true"
-                            allowpopups="true"
+                    {/* Sidebar - Overlay Mode */}
+                    <div className={`absolute top-0 right-0 bottom-0 z-30 bg-[#0e0e14] border-l border-white/10 shadow-2xl transition-transform duration-300 ease-in-out w-[400px] ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                        <Sidebar
+                            images={images}
+                            localImages={localImages}
+                            onLocalImagesChange={setLocalImages}
+                            activeTab={activeTab}
+                            onTabChange={setActiveTab}
+                            onStartGeneration={handleStartGeneration}
+                            onStopGeneration={handleStopGeneration}
+                            isProcessing={isProcessing}
+                            processingStatus={processingStatus}
+                            toast={toast}
+                            onOpenSettings={() => setIsSettingsOpen(true)}
+                            settings={settings}
                         />
-                        {/* Loading Overlay */}
-                        {isLoading && (
-                            <div className="absolute top-0 left-0 w-full h-0.5 bg-transparent z-20">
-                                <div className="h-full bg-blue-500 animate-[loading_1s_ease-in-out_infinite]" style={{ width: '30%' }}></div>
-                            </div>
-                        )}
                     </div>
                 </div>
-
-                {/* Sidebar - Overlay Mode */}
-                <div className={`absolute top-0 right-0 bottom-0 z-30 bg-[#0e0e14] border-l border-white/10 shadow-2xl transition-transform duration-300 ease-in-out w-[400px] ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                    <Sidebar
-                        images={images}
-                        localImages={localImages}
-                        onLocalImagesChange={setLocalImages}
-                        activeTab={activeTab}
-                        onTabChange={setActiveTab}
-                        onStartGeneration={handleStartGeneration}
-                        onStopGeneration={handleStopGeneration}
-                        isProcessing={isProcessing}
-                        processingStatus={processingStatus}
-                        toast={toast}
-                        onOpenSettings={() => setIsSettingsOpen(true)}
-                        settings={settings}
-                    />
-                </div>
-            </div>
+            )}
 
             {/* Fab for opening sidebar if closed and processing */}
             {!isSidebarOpen && isProcessing && (
