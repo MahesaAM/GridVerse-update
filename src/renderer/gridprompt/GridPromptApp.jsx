@@ -37,7 +37,7 @@ export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) 
             minImageWidth: 50,
             minImageHeight: 50,
             geminiApiKey: '',
-            promptTemplate: 'Describe this image in detail for an AI art generator.',
+            promptTemplate: 'Describe this image in a single, concise sentence.',
             history: []
         };
     });
@@ -144,7 +144,7 @@ export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) 
                         apiKey,
                         base64,
                         mimeType,
-                        prompt: settings.promptTemplate,
+                        prompt: settings.promptTemplate + " Respond in a single line.",
                         model: globalConfig.model // Explicitly pass global model
                     });
                 } else if (provider === 'gemini') {
@@ -152,7 +152,7 @@ export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) 
                         apiKey: globalConfig.apiKey,
                         base64,
                         mimeType,
-                        prompt: settings.promptTemplate
+                        prompt: settings.promptTemplate + " Respond in a single line."
                     });
                 } else {
                     throw new Error(`Provider ${provider} not fully supported in GridPrompt yet.`);
@@ -167,7 +167,7 @@ export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) 
                     throw new Error(result.error);
                 }
 
-                return result.text ? result.text.replace(/(\r\n|\n|\r)/gm, " ").trim() : "";
+                return result.text ? result.text.replace(/(\r\n|\n|\r)/gm, " ").replace(/\*+/g, "").replace(/\s+/g, " ").trim() : "";
             } catch (e) {
                 console.error('Generation Exception:', e);
                 throw e;

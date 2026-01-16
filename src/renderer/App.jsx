@@ -71,6 +71,19 @@ export default function App() {
 
         fetchApiKeys();
 
+        // Initialize Global AI Config if missing (Auto-Default to Groq/GridAI)
+        const savedConfig = localStorage.getItem('global-ai-config');
+        if (!savedConfig) {
+            const defaultConfig = {
+                provider: 'groq',
+                apiKey: '',
+                model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+                endpoint: 'http://localhost:11434'
+            };
+            localStorage.setItem('global-ai-config', JSON.stringify(defaultConfig));
+            console.log('Initialized default Global AI Config (GridAI)');
+        }
+
         const validateSession = async () => {
             const storedUser = localStorage.getItem('gridvidUser');
             if (storedUser) {

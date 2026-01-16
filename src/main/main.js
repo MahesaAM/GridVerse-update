@@ -538,6 +538,10 @@ ipcMain.handle('gridtrends:generate-prompts', async (event, { topic, style, coun
     return await aiService.generatePrompts(topic, style, count, apiKey);
 });
 
+ipcMain.handle('gridtrends:chat-discussion', async (event, { history, context, apiKey }) => {
+    return await aiService.chatDiscussion(history, context, apiKey);
+});
+
 // Deprecated or Proxy
 ipcMain.handle('gridtrends:get-best-sellers', async () => {
     return await stockScraper.getCombinedTrends();

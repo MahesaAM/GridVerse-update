@@ -98,33 +98,36 @@ class AIService {
 
         // "Predict Next Big Thing" prompt
         const prompt = `
-        You are a Market Intelligence Expert for Microstock (Stock Photography/Video).
-        User wants to know COMPREHENSIVE upcoming global events and detailed content strategy.
+        You are a Senior Portfolio Manager for a top Microstock Agency (like Stocksy or Getty Images).
+        Your goal is to guide contributors to create HIGH-SELLING COMMERCIAL CONTENT.
+        
+        Analyze the current date and global context.
+        Provide a "Microstock Success Radar" with:
+        1. 4 MAJOR VISUAL TRENDS that will be in high demand for advertising/marketing in 3-4 months.
+        2. 5 KEY EVENTS/SEASONS that creators must shoot for NOW (e.g., if it's Oct, shoot for Xmas/NewYear).
 
-        Based on current date and global calendar, PREDICT:
-        1. 4 MAJOR UPCOMING VISUAL TRENDS (The Next Big Thing).
-        2. 5 IMPORTANT GLOBAL EVENTS (Content Calendar) for the next 3-4 months that stock creators MUST prepare for.
-
-        For each Event, provide a "Content Strategy" explaining exactly what to create.
-
+        For each Trend/Event, providing actionable "Commercial Guidance" is critical.
+        
         Output JSON:
         {
             "predictions": [
                 {
-                    "title": "Trend Name (Creative)",
-                    "conviction": 95, 
-                    "description": "Short description in Indonesian language.",
-                    "reasoning": "Why this will boom."
+                    "title": "Trend Name",
+                    "conviction": 90, 
+                    "description": "Brief description in Indonesian.",
+                    "commercial_advice": "Why it sells.",
+                    "technical_tips": "e.g., 'Natural light'."
                 }
             ],
             "upcoming_events": [
                 {
-                    "date": "DD MMM",
+                    "date": "YYYY-MM-DD", // EXACT ISO FORMAT (2024-10-25). If unsure of day, use 01.
                     "event": "Event Name",
-                    "niche": "Target Keyword",
-                    "strategy": "Explanation of what content to create (in Indonesian). Focus on visual concepts, costumes, props, and setting.",
-                    "visual_cues": "Specific objects/colors to include",
-                    "keywords": "comma, separated, high, value, keywords"
+                    "niche": "Killer Keyword",
+                    "strategy": "Detailed strategy in Indonesian",
+                    "buyer_needs": "Who is buying?",
+                    "visual_cues": "Props/Colors",
+                    "keywords": "comma, separated"
                 }
             ]
         }
@@ -134,7 +137,7 @@ class AIService {
             const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${apiKey}`,
+                    "Authorization": "Bearer " + apiKey,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
@@ -161,29 +164,72 @@ class AIService {
                         title: "Neon-Nature Synthesis",
                         conviction: 85,
                         description: "Penggabungan elemen alam organik dengan cahaya neon futuristik.",
-                        reasoning: "Market saturation of plain nature requires a tech twist."
-                    },
-                    {
-                        title: "Eco-Punk Reconstruction",
-                        conviction: 92,
-                        description: "Visual DIY daur ulang dengan estetika punk yang kasar.",
-                        reasoning: "Sustainability moving from clean/corporate to raw/activist."
+                        commercial_advice: "Tech companies need green-tech visuals.",
+                        technical_tips: "Use gel lighting on plants."
                     }
                 ]
             };
+        }
+    }
+
+    async chatDiscussion(history, context, apiKey) {
+        if (!apiKey) return { error: 'No API Key' };
+
+        const systemPrompt = `
+        You are "GridMentor", a warm and expert Microstock Consultant. 
+        You help photographers and AI artists sell more on Adobe Stock, Shutterstock, and Freepik.
+        
+        Your Advice Style:
+        - Commercial & Practical: Focus on what SELLS, not just art.
+        - Encouraging but Honest: If a niche is saturated, say it.
+        - Indonesian Language: Reply in conversational Bahasa Indonesia.
+        
+        Context of current trends passed by user:
+        ${JSON.stringify(context || {})}
+        
+        Answer short, punchy, and actionable.
+        `;
+
+        try {
+            const messages = [
+                { role: "system", content: systemPrompt },
+                ...history
+            ];
+
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey} `,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    messages: messages,
+                    model: "llama-3.3-70b-versatile",
+                    temperature: 0.7,
+                    max_tokens: 1024
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.message);
+
+            return { role: 'assistant', content: data.choices[0].message.content };
+        } catch (e) {
+            console.error("Chat Error:", e);
+            return { role: 'assistant', content: "Maaf, saya sedang kehilangan koneksi ke server inspirasi. Coba lagi ya!" };
         }
     }
     async generatePrompts(topic, style, count = 3, apiKey) {
         if (!apiKey) return { error: 'No API Key' };
 
         const prompt = `
-        You are an Expert AI Art Prompt Engineer (Midjourney v6 & DALL-E 3 Specialist).
+        You are an Expert AI Art Prompt Engineer(Midjourney v6 & DALL - E 3 Specialist).
         
-        Generate ${count} HIGH-CONVERTING stock photography prompts for the topic: "${topic}".
-        Style: ${style}
+        Generate ${count} HIGH - CONVERTING stock photography prompts for the topic: "${topic}".
+            Style: ${style}
         
-        The prompts must be commercially viable for stock sites (Adobe Stock, Shutterstock).
-        Include technical details (lighting, camera, lens, settings).
+        The prompts must be commercially viable for stock sites(Adobe Stock, Shutterstock).
+        Include technical details(lighting, camera, lens, settings).
         
         Output JSON:
         {
@@ -202,7 +248,7 @@ class AIService {
             const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${apiKey}`,
+                    "Authorization": `Bearer ${apiKey} `,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
