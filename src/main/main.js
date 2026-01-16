@@ -10,7 +10,12 @@ const { networkInterfaces } = require('os'); // Added
 
 const { runGenerate, stopGenerate } = require('../automation/generator');
 const { runLoginAll } = require('../automation/loginallaccount');
+
 const fsPromises = fs.promises;
+
+// Fix for proxy SSL issues
+app.commandLine.appendSwitch('ignore-certificate-errors'); // Allow self-signed certs (common with proxies)
+app.commandLine.appendSwitch('allow-insecure-localhost', 'true');
 
 // GridVector Config
 const { CONFIG } = require('./config-electron');
@@ -326,6 +331,15 @@ function setupAutoUpdater() {
     });
 }
 
+// Global Proxy Auth Handler
+app.on('login', (event, webContents, request, authInfo, callback) => {
+    if (authInfo.isProxy && authInfo.host === 'dc.decodo.com') {
+        event.preventDefault();
+        console.log("[Main] Authenticating with proxy...");
+        callback('spaq4fh60q', 'r~5aJu14wY3uPjgwXb');
+    }
+});
+
 // Trigger check on startup
 app.whenReady().then(() => {
     setupAutoUpdater();
@@ -600,6 +614,85 @@ ipcMain.handle("process-image", async (event, { filePath, fileBuffer, fileName }
         console.error(`[Main] Process image error:`, e);
         return { success: false, error: e.message };
     }
+});
+
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin());
+const { getChromiumPath } = require('../automation/chromium-utils');
+
+ipcMain.handle("get-imagefx-token", async (event, tool = 'imagefx') => {
+    return new Promise(async (resolve) => {
+        let browser = null;
+        try {
+            console.log(`[Main] Launching Puppeteer for ${tool} Token Capture...`);
+            const executablePath = getChromiumPath();
+
+            browser = await puppeteer.launch({
+                headless: false,
+                executablePath: executablePath,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--proxy-server=http://dc.decodo.com:10001',
+                    '--window-size=1280,800'
+                ],
+                defaultViewport: null
+            });
+
+            const page = await browser.newPage();
+
+            // Authenticate Proxy
+            console.log("[Main] Authenticating Puppeteer Proxy...");
+            await page.authenticate({
+                username: 'spaq4fh60q',
+                password: 'r~5aJu14wY3uPjgwXb'
+            });
+
+            // Setup Interception
+            let tokenFound = false;
+
+            await page.setRequestInterception(true);
+            page.on('request', (req) => {
+                const headers = req.headers();
+                const authHeader = headers['authorization'] || headers['Authorization'];
+                const url = req.url();
+
+                if (url.includes('aisandbox-pa.googleapis.com') && authHeader && authHeader.startsWith('Bearer ')) {
+                    const token = authHeader.replace('Bearer ', '');
+                    console.log(`[Main] ${tool} Token Captured via Puppeteer!`);
+                    tokenFound = true;
+                    resolve({ success: true, token });
+
+                    // Close properly
+                    setTimeout(async () => {
+                        if (browser) await browser.close();
+                    }, 1000);
+                }
+
+                req.continue();
+            });
+
+            // Handle browser close by user
+            browser.on('disconnected', () => {
+                if (!tokenFound) {
+                    resolve({ success: false, error: "Browser closed by user" });
+                }
+            });
+
+            const targetUrl = tool === 'whisk'
+                ? "https://labs.google/fx/tools/whisk/project"
+                : "https://labs.google/fx/id/tools/image-fx";
+
+            console.log(`[Main] Navigating to ${targetUrl}...`);
+            await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
+
+        } catch (e) {
+            console.error("[Main] Puppeteer Token Capture Error:", e);
+            if (browser) await browser.close();
+            resolve({ success: false, error: e.message });
+        }
+    });
 });
 
 

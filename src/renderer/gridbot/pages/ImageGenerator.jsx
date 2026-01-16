@@ -513,16 +513,37 @@ export default function ImageGenerator({ onBack, onLogout, onProcessingChange })
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Auth</label>
-              <input
-                type="password"
-                value={bearerToken}
-                onChange={e => {
-                  setBearerToken(e.target.value);
-                  localStorage.setItem("bearerToken", e.target.value);
-                }}
-                placeholder="Bearer Token"
-                className="w-full bg-[#1c1c1f] border border-[#27272a] rounded-md px-2 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-purple-500/50"
-              />
+              <div className="flex gap-1.5">
+                <input
+                  type="password"
+                  value={bearerToken}
+                  onChange={e => {
+                    setBearerToken(e.target.value);
+                    localStorage.setItem("bearerToken", e.target.value);
+                  }}
+                  placeholder="Bearer Token"
+                  className="flex-1 bg-[#1c1c1f] border border-[#27272a] rounded-md px-2 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-purple-500/50"
+                />
+                <button
+                  onClick={async () => {
+                    if (window.electronAPI?.getImageFxToken) {
+                      const res = await window.electronAPI.getImageFxToken('imagefx');
+                      if (res && res.success && res.token) {
+                        setBearerToken(res.token);
+                        localStorage.setItem("bearerToken", res.token);
+                        alert("Token captured successfully!");
+                      } else {
+                        if (res.error !== "Window closed before token capture") alert("Failed to capture token: " + (res.error || "Unknown error"));
+                      }
+                    } else {
+                      alert("API not supported");
+                    }
+                  }}
+                  className="px-2 py-1 text-xs bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 rounded border border-purple-600/50 transition-colors whitespace-nowrap"
+                >
+                  Get Token
+                </button>
+              </div>
             </div>
 
             <div className="space-y-1.5">

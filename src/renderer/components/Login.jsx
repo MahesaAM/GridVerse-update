@@ -51,17 +51,29 @@ export default function Login({ onLoginSuccess }) {
             return;
         }
 
-        try {
-            console.log('Login attempt:', { username });
-            // Use MAC address as stable Device ID as requested
+        const loginPromise = async () => {
+            console.log('Login attempt starting:', { username });
+
+            // 1. Get Device ID
             let deviceId = 'BROWSER_DEV_ID';
-            if (window.electronAPI && window.electronAPI.getMacAddress) {
-                deviceId = await window.electronAPI.getMacAddress();
-            } else if (window.api && window.api.getBiosSerial) {
-                // Fallback to legacy method if new API missing (unlikely)
-                deviceId = await window.api.getBiosSerial();
+            try {
+                if (window.electronAPI && window.electronAPI.getMacAddress) {
+                    console.log('Fetching MAC address...');
+                    deviceId = await window.electronAPI.getMacAddress();
+                    console.log('MAC address fetched:', deviceId);
+                } else if (window.api && window.api.getBiosSerial) {
+                    console.log('Fetching Bios Serial...');
+                    deviceId = await window.api.getBiosSerial();
+                } else {
+                    console.warn('No Electron API found for device ID, using fallback.');
+                }
+            } catch (err) {
+                console.error('Error fetching device ID:', err);
+                // Continue with fallback or rethrow? Let's continue but log it.
             }
 
+            // 2. Query Supabase
+            console.log('Querying Supabase...');
             const { data, error: dbError } = await supabase
                 .from('users_gridverse')
                 .select('*')
@@ -69,45 +81,73 @@ export default function Login({ onLoginSuccess }) {
                 .eq('password', password)
                 .single();
 
-            if (dbError || !data) {
-                setError('Invalid username or password.');
-                setLoading(false);
-                return;
+            if (dbError) {
+                console.error('Supabase error:', dbError);
+                throw new Error('Database error: ' + dbError.message);
+            }
+            if (!data) {
+                throw new Error('Invalid username or password.');
             }
 
+            // 3. Check Device ID
             if (data.deviceId && data.deviceId !== deviceId) {
-                setError('This account is already registered to another device.');
-                setLoading(false);
-                return;
+                throw new Error('This account is already registered to another device.');
             }
 
+            // 4. Check Expiration
             if (data.expired) {
                 const expiredDate = new Date(data.expired);
                 const now = new Date();
                 if (now > expiredDate) {
-                    setError('Your subscription has expired.');
-                    setLoading(false);
-                    return;
+                    throw new Error('Your subscription has expired.');
                 }
             }
 
+            // 5. Register Device if new
             if (!data.deviceId) {
-                await supabase
+                console.log('Registering new device ID...');
+                const { error: updateError } = await supabase
                     .from('users_gridverse')
                     .update({ deviceId: deviceId })
                     .eq('username', username);
+
+                if (updateError) {
+                    console.error('Update device ID error:', updateError);
+                    throw new Error('Failed to register device.');
+                }
             }
 
+            // 6. Save Session
             const userSession = {
                 username: data.username,
                 expired: data.expired
             };
-            localStorage.setItem('gridvidUser', JSON.stringify(userSession));
+
+            try {
+                localStorage.setItem('gridvidUser', JSON.stringify(userSession));
+            } catch (storageErr) {
+                console.error('LocalStorage error:', storageErr);
+                // Likely the 'Database IO error' cause
+                throw new Error('Local Storage failed. Please clear app data.');
+            }
+
+            return userSession;
+        };
+
+        try {
+            // Race between login and timeout
+            const userSession = await Promise.race([
+                loginPromise(),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Login timed out. Please check your connection or clear app data.')), 15000)
+                )
+            ]);
+
             onLoginSuccess(userSession);
 
         } catch (err) {
-            console.error('Login error:', err);
-            setError('Login failed. Please try again.');
+            console.error('Login final error:', err);
+            setError(err.message || 'Login failed.');
         } finally {
             setLoading(false);
         }

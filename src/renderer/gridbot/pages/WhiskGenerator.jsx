@@ -523,16 +523,38 @@ export default function WhiskGenerator({ onBack, onLogout, onProcessingChange })
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Auth</label>
-              <input
-                type="password"
-                value={bearerToken}
-                onChange={e => {
-                  setBearerToken(e.target.value);
-                  localStorage.setItem("whiskBearerToken", e.target.value);
-                }}
-                placeholder="Bearer Token"
-                className="w-full bg-[#1c1c1f] border border-[#27272a] rounded-md px-2 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-yellow-500/50"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={bearerToken}
+                  onChange={e => {
+                    setBearerToken(e.target.value);
+                    localStorage.setItem("whiskBearerToken", e.target.value);
+                  }}
+                  placeholder="Bearer Token"
+                  className="flex-1 bg-[#1c1c1f] border border-[#27272a] rounded-md px-2 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-yellow-500/50"
+                />
+                <button
+                  onClick={async () => {
+                    if (window.electronAPI?.getImageFxToken) {
+                      const res = await window.electronAPI.getImageFxToken('whisk');
+                      if (res && res.success && res.token) {
+                        setBearerToken(res.token);
+                        localStorage.setItem("whiskBearerToken", res.token);
+                        alert("Token captured successfully!");
+                      } else {
+                        if (res.error !== "Window closed before token capture") alert("Failed to capture token: " + (res.error || "Unknown error"));
+                      }
+                    } else {
+                      alert("API not supported");
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-[#1c1c1f] hover:bg-[#27272a] border border-[#27272a] rounded-md text-xs text-yellow-500 font-medium transition-colors"
+                  title="Get Token from Whisk"
+                >
+                  Get Token
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -78,7 +78,9 @@ const api = {
     deleteFile: (path) => ipcRenderer.invoke('delete-file', path),
     readFile: (path) => ipcRenderer.invoke('read-file', path),
     writeFile: (data) => ipcRenderer.invoke('write-file', data),
-    openDetachedWindow: (appId) => ipcRenderer.invoke('open-detached-window', appId)
+    openDetachedWindow: (appId) => ipcRenderer.invoke('open-detached-window', appId),
+    getImageFxToken: (tool) => ipcRenderer.invoke('get-imagefx-token', tool),
+    fetchWithCookie: (config) => ipcRenderer.invoke('fetch-with-cookie', config)
 };
 
 // Use `contextBridge` APIs to expose Renderer to Main process
@@ -86,6 +88,7 @@ if (process.contextIsolated) {
     try {
         contextBridge.exposeInMainWorld('electron', electronAPI);
         contextBridge.exposeInMainWorld('api', api);
+        contextBridge.exposeInMainWorld('electronAPI', api); // Alias for GridBot components
     } catch (error) {
         console.error(error);
     }

@@ -5,7 +5,7 @@ export default function GlobalAISettingsModal({ isOpen, onClose, onSave }) {
     const [config, setConfig] = useState({
         provider: 'groq', // 'gemini' | 'gpt' | 'ollama' | 'groq'
         apiKey: '',
-        model: '',
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         endpoint: 'http://localhost:11434'
     });
 

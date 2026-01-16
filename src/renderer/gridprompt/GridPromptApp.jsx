@@ -96,7 +96,7 @@ export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) 
             return;
         }
         const globalConfig = JSON.parse(globalSaved);
-        const provider = globalConfig.provider || 'gemini';
+        const provider = globalConfig.provider || 'groq';
 
         // Prepare keys if Groq
         let groqKeys = [];
@@ -167,7 +167,7 @@ export default function GridPromptApp({ onBack, onLogout, onProcessingChange }) 
                     throw new Error(result.error);
                 }
 
-                return result.text;
+                return result.text ? result.text.replace(/(\r\n|\n|\r)/gm, " ").trim() : "";
             } catch (e) {
                 console.error('Generation Exception:', e);
                 throw e;

@@ -847,28 +847,56 @@ async function processVideo(videoPath, targetWidth, targetHeight, muteAudio, log
     const safeWidth = targetWidth % 2 === 0 ? targetWidth : targetWidth + 1;
     const safeHeight = targetHeight % 2 === 0 ? targetHeight : targetHeight + 1;
 
-    if (safeWidth !== targetWidth || safeHeight !== targetHeight) {
-        logCallback(`Adjusting target resolution to even numbers: ${safeWidth}x${safeHeight}`);
+    // Check if we even need to resize
+    const currentDims = await new Promise((resolve) => {
+        const exePath = ffmpegPath.replace('app.asar', 'app.asar.unpacked');
+        execFile(exePath, ['-i', videoPath], (error, stdout, stderr) => {
+            const output = stderr || stdout || "";
+            const match = output.match(/Video:.*?\b(\d+)x(\d+)\b/);
+            if (match && match.length >= 3) {
+                resolve({ width: parseInt(match[1]), height: parseInt(match[2]) });
+            } else {
+                resolve(null);
+            }
+        });
+    });
+
+    const needResize = currentDims ? (currentDims.width !== safeWidth || currentDims.height !== safeHeight) : true;
+
+    // OPTIMIZATION: If no resize needed and just mute, use FAST copy
+    if (!needResize && muteAudio) {
+        logCallback("Dimensions match. Skipping heavy re-encode, just stripping audio...");
+        return await stripAudio(videoPath, logCallback);
     }
 
     return new Promise((resolve, reject) => {
         const outputPath = videoPath.replace('.mp4', '_processed.mp4');
-        logCallback(`Processing video: Resize(${safeWidth}x${safeHeight}) + Sharpen + ${muteAudio ? 'Mute' : 'Audio Copy'}...`);
+        const isMac = process.platform === 'darwin';
+
+        logCallback(`Processing video: Resize(${safeWidth}x${safeHeight}) + Sharpen... [${isMac ? 'Hardware Accel ON' : 'CPU Mode'}]`);
 
         // Filter Logic:
         // 1. Scale & Crop (Zoom to Fill)
         // 2. Unsharp Mask (Sharpen)
         const scaleFilter = `scale=max(${safeWidth}\\,iw*${safeHeight}/ih):max(${safeHeight}\\,ih*${safeWidth}/iw)`;
         const cropFilter = `crop=${safeWidth}:${safeHeight}`;
-        const sharpenFilter = `unsharp=5:5:1.0:5:5:0.0`; // Default sharpening
+        const sharpenFilter = `unsharp=5:5:1.0:5:5:0.0`;
 
         const complexFilter = `[0:v]${scaleFilter},${cropFilter},${sharpenFilter}[outv]`;
 
         let command = ffmpeg(videoPath)
-            .complexFilter(complexFilter, 'outv')
-            .outputOptions('-c:v libx264')
-            .outputOptions('-preset ultrafast') // Optimization: Fast encoding
-            .outputOptions('-crf 23'); // Reasonable quality
+            .complexFilter(complexFilter, 'outv');
+
+        if (isMac) {
+            // HARDWARE ACCELERATION FOR MAC
+            command.outputOptions('-c:v h264_videotoolbox');
+            command.outputOptions('-b:v 5000k');
+        } else {
+            // CPU Fallback
+            command.outputOptions('-c:v libx264');
+            command.outputOptions('-preset ultrafast');
+            command.outputOptions('-crf 23');
+        }
 
         if (muteAudio) {
             command.outputOptions('-an'); // Remove audio
@@ -882,7 +910,7 @@ async function processVideo(videoPath, targetWidth, targetHeight, muteAudio, log
                 try {
                     fs.unlinkSync(videoPath);
                     fs.renameSync(outputPath, videoPath);
-                    logCallback("Video processing (Resize/Sharpen) complete.");
+                    logCallback("Video processing complete.");
                     resolve(videoPath);
                 } catch (e) {
                     reject(e);
@@ -890,8 +918,13 @@ async function processVideo(videoPath, targetWidth, targetHeight, muteAudio, log
             })
             .on('error', (err) => {
                 logCallback(`Error processing video: ${err.message}`);
-                if (err.stderr) logCallback(`FFmpeg Stderr: ${err.stderr}`);
-                reject(err);
+                // Fallback: If processing failed but we needed to mute, AT LEAST mute it.
+                if (muteAudio) {
+                    logCallback("Processing failed, attempting standard mute fallback...");
+                    stripAudio(videoPath, logCallback).then(resolve).catch(reject);
+                } else {
+                    reject(err);
+                }
             });
     });
 }
