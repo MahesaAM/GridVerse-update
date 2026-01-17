@@ -493,7 +493,7 @@ async function getAuthTokenFromPage(page, logCallback, accountEmail = "kadesimo@
                             const t = (btn.innerText || btn.value || "").toLowerCase().trim();
                             if (keywords.some(k => t === k || (t.length < 30 && t.includes(k)))) {
                                 btn.click();
-                                return true;
+                                return t;
                             }
                         }
                         return false;
@@ -501,7 +501,7 @@ async function getAuthTokenFromPage(page, logCallback, accountEmail = "kadesimo@
 
                     if (btnClicked) {
                         consentClicks++;
-                        logCallback(`Clicked consent/interstitial button. (Click #${consentClicks})`);
+                        logCallback(`Clicked consent/interstitial button "${btnClicked}". (Click #${consentClicks})`);
                         await new Promise(r => setTimeout(r, 2000));
                     } else {
                         await new Promise(r => setTimeout(r, 1000));
@@ -549,7 +549,21 @@ async function getAuthTokenFromPage(page, logCallback, accountEmail = "kadesimo@
         // Periodic probe (keep this as backup) - just to force traffic
         if (elapsed % 3000 < 500 && !authToken) {
             try {
+                // Scroll random amount
                 await page.evaluate(() => { window.scrollTo(0, Math.random() * 500); }).catch(() => { });
+
+                // Try clicking "Home" or "Create" if visible to force nav/request
+                await page.evaluate(() => {
+                    const buttons = Array.from(document.querySelectorAll('a, button'));
+                    const nav = buttons.find(b => {
+                        const t = (b.innerText || "").toLowerCase();
+                        return t === "home" || t === "create" || t === "beranda";
+                    });
+                    // Don't actually CLICK nav if we are just probing, might navigate away. 
+                    // Just mouseover?
+                    // Verify "app" state if possible.
+                    if (window.app && window.app.refresh) window.app.refresh();
+                }).catch(() => { });
             } catch (e) { }
         }
     }
@@ -899,7 +913,8 @@ async function processVideo(videoPath, targetWidth, targetHeight, muteAudio, log
         }
 
         if (muteAudio) {
-            command.outputOptions('-an'); // Remove audio
+            logCallback("Applying mute filter (removing audio)...");
+            command.noAudio();
         } else {
             command.outputOptions('-c:a copy'); // Copy audio if present
         }

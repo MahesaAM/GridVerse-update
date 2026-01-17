@@ -172,17 +172,54 @@ class AIService {
         }
     }
 
-    async chatDiscussion(history, context, apiKey) {
+    async chatDiscussion(history, context, apiKey, image = null) {
         if (!apiKey) return { error: 'No API Key' };
 
         const systemPrompt = `
-        You are "GridMentor", a warm and expert Microstock Consultant. 
-        You help photographers and AI artists sell more on Adobe Stock, Shutterstock, and Freepik.
+        You are "GridMentor", the intelligent AI assistant inside the **GridVerse** application.
+        You are an expert on Microstock, AI Art, and specifically HOW to use GridVerse to automate the workflow.
+
+        **YOUR KNOWLEDGE BASE (About GridVerse):**
+        GridVerse is an all-in-one automation suite for Microstock Contributors & AI Artists.
         
-        Your Advice Style:
-        - Commercial & Practical: Focus on what SELLS, not just art.
-        - Encouraging but Honest: If a niche is saturated, say it.
-        - Indonesian Language: Reply in conversational Bahasa Indonesia.
+        **1. GridTrends (Current Module)**
+        - **Function**: Market intelligence & trend prediction.
+        - **Features**: "Future Radar" (predicts next month's trends), "Deep Market Analysis" (analyzes why images sell), and Global Event Calendar.
+        
+        **2. GridPrompt**
+        - **Function**: Advanced AI Prompt Generator.
+        - **Models**: Uses Gemini & Llama (via Groq) to craft high-converting prompts.
+        - **Key Feature**: "Image to Prompt" (uses Llama 4 Scout) to reverse-engineer prompts from reference images.
+        
+        **3. GridMeta**
+        - **Function**: AI Metadata Generator (Titles, Descriptions, Keywords).
+        - **Key Feature**: Drag & drop an image, and it uses Vision AI (Llama 4 Scout) to generate SEO-optimized metadata for stock sites (Adobe Stock, Shutterstock).
+        
+        **4. GridVector**
+        - **Function**: Vectorization Automation.
+        - **Features**: Integrates with Vectorizer.ai to bulk convert images (PNG/JPG) into SVGs for vector contributors. Supports auto-login and cookie management.
+        
+        **5. GridBot (Automation)**
+        - **Function**: The engine for browser automation.
+        - **Features**: Manages anti-detect browser profiles (Chromium) to safely upload/submit to multiple accounts without getting banned.
+        
+        **6. GridVid (VIDEO GENERATION)**
+        - **Function**: AI Video Generator Studio.
+        - **Features**: 
+            - **Text-to-Video**: Generate videos from prompts.
+            - **Image-to-Video**: Animate static images.
+            - **Models**: Supports Google Veo 3, Hailuo/Minimax, and Luma Dream Machine.
+            - **Headless Mode**: Can generate in background while you do other tasks.
+
+        **7. GridBrowser**
+        - **Function**: Built-in multi-profile browser.
+        - **Features**: Isolated cookies/storage for managing hundreds of microstock accounts simultaneously.
+
+        **Your Goal**:
+        - Guide the user on how to use these tools together (e.g., "Use GridTrends to find a niche, generate prompts in GridPrompt, then upscale/vectorize in GridVector").
+        - Troubleshoot basic issues (e.g., "Check your API keys in Settings if generation fails").
+        - Provide commercial advice based on this ecosystem.
+        - **Language**: Reply in conversational, helpful **Bahasa Indonesia**.
         
         Context of current trends passed by user:
         ${JSON.stringify(context || {})}
@@ -191,10 +228,34 @@ class AIService {
         `;
 
         try {
+            // Determine model based on image presence
+            // Llama 3.3 70B is text-only. 
+            // User requested Llama 4 Scout for Vision matching GridPrompt/Meta.
+            const model = image ? "meta-llama/llama-4-scout-17b-16e-instruct" : "llama-3.3-70b-versatile";
+
             const messages = [
                 { role: "system", content: systemPrompt },
                 ...history
             ];
+
+            // If image is present, properly attach it to the LAST user message
+            // or create a new message if the last one isn't user (unlikely in this flow)
+            if (image) {
+                const lastMsgIndex = messages.length - 1;
+                if (messages[lastMsgIndex].role === 'user') {
+                    // Convert simple text content to array content for multimodal
+                    const textContent = messages[lastMsgIndex].content;
+                    messages[lastMsgIndex].content = [
+                        { type: "text", text: textContent },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                url: `data:${image.mimeType};base64,${image.base64}`
+                            }
+                        }
+                    ];
+                }
+            }
 
             const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
@@ -204,7 +265,7 @@ class AIService {
                 },
                 body: JSON.stringify({
                     messages: messages,
-                    model: "llama-3.3-70b-versatile",
+                    model: model,
                     temperature: 0.7,
                     max_tokens: 1024
                 })

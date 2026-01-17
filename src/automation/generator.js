@@ -105,10 +105,9 @@ async function runTokenHarvest(accounts, tokenPool, logCallback, accountCallback
 
     logCallback({ key: 'auth', message: `Resuming account rotation from index ${startIndex} (${accounts[startIndex].email})` });
 
-    // Loop through all accounts, starting from startIndex, wrapping around
-    for (let i = 0; i < accounts.length; i++) {
-        if (isStopped) break;
-
+    // Loop continuously until stopped
+    let i = 0;
+    while (!isStopped) {
         const currentIndex = (startIndex + i) % accounts.length;
         const account = accounts[currentIndex];
 
@@ -135,13 +134,28 @@ async function runTokenHarvest(accounts, tokenPool, logCallback, accountCallback
             ];
             if (muteAudio) launchArgs.push('--mute-audio');
 
-            browser = await puppeteer.launch({
-                headless: headless ? 'new' : false,
-                executablePath: getChromiumPath(),
-                userDataDir: path.join(app.getPath('userData'), 'profiles', sanitize(account.email)),
-                args: launchArgs,
-                ignoreDefaultArgs: ['--enable-automation']
-            });
+            // Retry loop for launching browser (handles profile locks)
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    browser = await puppeteer.launch({
+                        headless: headless ? 'new' : false,
+                        executablePath: getChromiumPath(),
+                        userDataDir: path.join(app.getPath('userData'), 'profiles', sanitize(account.email)),
+                        args: launchArgs,
+                        ignoreDefaultArgs: ['--enable-automation']
+                    });
+                    break; // Success
+                } catch (e) {
+                    if (e.message && e.message.includes('already running')) {
+                        logCallback({ key: 'auth', message: `[${account.email}] Profile locked, retrying... (${attempt + 1}/3)` });
+                        await new Promise(r => setTimeout(r, 5000)); // Wait 5s
+                    } else {
+                        throw e; // Use outer catch for other errors
+                    }
+                }
+            }
+
+            if (!browser) throw new Error("Failed to launch browser after 3 attempts.");
 
             const page = await browser.newPage();
 
@@ -163,9 +177,12 @@ async function runTokenHarvest(accounts, tokenPool, logCallback, accountCallback
             if (browser) {
                 try { await browser.close(); } catch (e) { }
             }
+            // Give some time for process cleanup to release locks
+            await new Promise(r => setTimeout(r, 2000));
         }
+        i++;
     }
-    logCallback({ key: 'auth', message: 'Token Harvest Loop Finished.' });
+    logCallback({ key: 'auth', message: 'Token Harvest Loop Stopped.' });
 }
 
 /**

@@ -5,6 +5,7 @@ import gridverseLogo from './assets/gridverse.png'; // Import custom logo
 import SpotlightCard from './components/SpotlightCard';
 import AccountManager from './components/AccountManager';
 import GlobalAISettingsModal from './components/GlobalAISettingsModal';
+import GridMentorChat from './components/global/GridMentorChat';
 
 const APPS = [
     {
@@ -189,6 +190,9 @@ export default function AppLauncher({ onSelectApp, onLogout, appVersion, expirat
                 onClose={() => setShowGlobalSettings(false)}
                 onSave={(config) => console.log('Global AI Config Saved', config)}
             />
+
+            {/* GLOBAL ASSISTANT */}
+            <GridMentorChat />
         </div>
     );
 }

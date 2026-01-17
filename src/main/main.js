@@ -16,6 +16,7 @@ const fsPromises = fs.promises;
 // Fix for proxy SSL issues
 app.commandLine.appendSwitch('ignore-certificate-errors'); // Allow self-signed certs (common with proxies)
 app.commandLine.appendSwitch('allow-insecure-localhost', 'true');
+app.commandLine.appendSwitch('disable-quic'); // Fix for ERR_QUIC_PROTOCOL_ERROR
 
 // GridVector Config
 const { CONFIG } = require('./config-electron');
@@ -538,8 +539,8 @@ ipcMain.handle('gridtrends:generate-prompts', async (event, { topic, style, coun
     return await aiService.generatePrompts(topic, style, count, apiKey);
 });
 
-ipcMain.handle('gridtrends:chat-discussion', async (event, { history, context, apiKey }) => {
-    return await aiService.chatDiscussion(history, context, apiKey);
+ipcMain.handle('gridtrends:chat-discussion', async (event, { history, context, apiKey, image }) => {
+    return await aiService.chatDiscussion(history, context, apiKey, image);
 });
 
 // Deprecated or Proxy
@@ -639,7 +640,8 @@ ipcMain.handle("get-imagefx-token", async (event, tool = 'imagefx') => {
                     '--no-sandbox',
                     '--disable-setuid-sandbox',
                     '--proxy-server=http://dc.decodo.com:10001',
-                    '--window-size=1280,800'
+                    '--window-size=1280,800',
+                    '--disable-quic'
                 ],
                 defaultViewport: null
             });

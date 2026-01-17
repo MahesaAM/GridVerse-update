@@ -654,14 +654,18 @@ export default function Generator({ mode, isHeadless }) {
                     <div className="flex flex-col">
                         <span className="text-[9px] uppercase tracking-wider text-emerald-500/80 font-bold">Done</span>
                         <span className="text-lg font-bold text-emerald-400 leading-none">
-                            {Object.values(itemStatuses).filter(s => s === 'success').length}
+                            {mode === 'image'
+                                ? images.filter(img => img.status === 'success').length
+                                : Object.values(itemStatuses).filter(s => s === 'success').length}
                         </span>
                     </div>
                     <div className="h-6 w-px bg-white/5"></div>
                     <div className="flex flex-col">
                         <span className="text-[9px] uppercase tracking-wider text-red-500/80 font-bold">Error</span>
                         <span className="text-lg font-bold text-red-400 leading-none">
-                            {Object.values(itemStatuses).filter(s => s === 'error').length}
+                            {mode === 'image'
+                                ? images.filter(img => img.status === 'error').length
+                                : Object.values(itemStatuses).filter(s => s === 'error').length}
                         </span>
                     </div>
 

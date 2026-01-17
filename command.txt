@@ -1,0 +1,46 @@
+# === PANDUAN UPDATE GRIDVERSE (AMAN & RAPI) ===
+
+# KONSEP DASAR:
+# 1. Repo "GridVerse" (origin) = TEMPAT SIMPAN CODE (Privat).
+# 2. Repo "GridVerse-update" (update_repo) = TEMPAT RILIS INSTALLER (Publik).
+#    Kita tidak boleh menaruh code di Publik.
+
+# --- LANGKAH 1: SIMPAN CODE KE TEMPAT AMAN (PRIVAT) ---
+
+# 1. Simpan semua perubahan file Anda
+git add .
+git commit -m "Update v3.4.6"
+
+# 2. Kirim update code ke server Privat (GridVerse)
+#    (File Anda aman tersimpan di sini)
+git push origin master
+
+# 3. Beri Tag pada Code (Tanda versi di code asli)
+git tag v3.4.6
+git push origin v3.4.6
+
+
+# --- LANGKAH 2: SIAPKAN TAG UNTUK PUBLIK (TANPA CODE) ---
+
+# 4. Pindah ke "Ruang Kosong" (Branch Release-Shell)
+#    JANGAN KAGET: File code Anda akan "hilang" sebentar.
+#    Ini normal karena kita masuk ke ruangan khusus yang cuma berisi README.
+git checkout release-shell
+
+# 5. Pasang Tag v3.4.6 di ruangan kosong ini
+#    (-f artinya force/paksa, agar tag menempel di sini, bukan di code)
+git tag -f v3.4.6
+
+# 6. Kirim Tag Kosong ini ke server Publik (GridVerse-update)
+#    User akan melihat tag ini untuk update, tapi tidak bisa lihat code-nya.
+git push update_repo v3.4.6
+
+
+# --- LANGKAH 3: KEMBALI BEKERJA ---
+
+# 7. Kembali ke ruangan utama (Branch Master)
+#    File code Anda akan MUNCUL KEMBALI di sini.
+git checkout master
+
+# SELESAI!
+# Sekarang Anda bisa buka GitHub GridVerse-update untuk upload installer (.exe/.dmg)

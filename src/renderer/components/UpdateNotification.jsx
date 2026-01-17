@@ -69,7 +69,11 @@ const UpdateNotification = ({ isManualCheck, onCheckComplete }) => {
         // Assuming App.jsx renders this once and keeps it mounted.
 
         return () => {
-            // Cleanup if the bridge supports it, otherwise do nothing
+            if (removeAvailable) removeAvailable();
+            if (removeNotAvailable) removeNotAvailable();
+            if (removeProgress) removeProgress();
+            if (removeDownloaded) removeDownloaded();
+            if (removeError) removeError();
         };
     }, [isManualCheck, onCheckComplete, downloading]);
 

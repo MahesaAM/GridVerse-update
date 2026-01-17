@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Telescope, Calendar, Sparkles, Loader2, X, Copy, Check, Lightbulb, Play, MessageCircle, Send, Bot, User, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Telescope, Calendar, Sparkles, Loader2, X, Copy, Check, Lightbulb, Play, ArrowLeft, ArrowRight } from 'lucide-react';
 
 const FutureSignals = () => {
     // Data State
@@ -17,13 +17,7 @@ const FutureSignals = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [copiedIndex, setCopiedIndex] = useState(null);
 
-    // Chat State
-    const [chatOpen, setChatOpen] = useState(false);
-    const [chatHistory, setChatHistory] = useState([
-        { role: 'system', content: "Halo! Saya GridMentor. Ada yang bisa saya bantu tentang strategi microstock hari ini?" }
-    ]);
-    const [chatInput, setChatInput] = useState('');
-    const [isChatting, setIsChatting] = useState(false);
+    // Calendar State
 
     // Calendar State
     const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
@@ -304,59 +298,6 @@ const FutureSignals = () => {
         URL.revokeObjectURL(url);
     };
 
-    const handleChatSubmit = async (e) => {
-        e.preventDefault();
-        if (!chatInput.trim() || isChatting) return;
-
-        const userMsg = { role: 'user', content: chatInput };
-        setChatHistory(prev => [...prev, userMsg]);
-        setChatInput('');
-        setIsChatting(true);
-
-        try {
-            const globalConfig = JSON.parse(localStorage.getItem('global-ai-config') || '{}');
-            let apiKey = globalConfig.apiKey;
-
-            // Try to use Groq key if available
-            const storedKeys = localStorage.getItem('groq_api_keys');
-            if (storedKeys) {
-                try {
-                    const keys = JSON.parse(storedKeys);
-                    if (keys.length > 0) apiKey = keys[Math.floor(Math.random() * keys.length)];
-                } catch (e) { }
-            }
-
-            if (!apiKey) {
-                setChatHistory(prev => [...prev, { role: 'assistant', content: "Please configure API Key first." }]);
-                setIsChatting(false);
-                return;
-            }
-
-            const context = {
-                predictions: predictions,
-                events: events
-            };
-
-            // Only send last 10 messages to keep context light
-            const historyToSend = chatHistory.slice(-10).filter(m => m.role !== 'system');
-            historyToSend.push(userMsg);
-
-            const result = await window.electron.ipcRenderer.invoke('gridtrends:chat-discussion', {
-                history: historyToSend,
-                context,
-                apiKey
-            });
-
-            setChatHistory(prev => [...prev, { role: 'assistant', content: result.content }]);
-
-        } catch (error) {
-            console.error("Chat Error:", error);
-            setChatHistory(prev => [...prev, { role: 'assistant', content: "Maaf, terjadi kesalahan pada koneksi." }]);
-        } finally {
-            setIsChatting(false);
-        }
-    };
-
     return (
         <div className="p-8 relative">
             <div className="flex items-center justify-between mb-8">
@@ -365,13 +306,6 @@ const FutureSignals = () => {
                     <p className="text-slate-400 text-sm">Intip masa depan: Prediksi Tren & Jadwal Event Global.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button
-                        onClick={() => setChatOpen(true)}
-                        className="bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 px-4 py-2 rounded-lg text-xs font-bold transition-all border border-indigo-500/30 flex items-center gap-2"
-                    >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        Discuss Trends
-                    </button>
                     <button
                         onClick={analyzePredictions}
                         disabled={loading}
@@ -570,67 +504,7 @@ const FutureSignals = () => {
                 </div>
             </div>
 
-            {/* CHAT DRAWER */}
-            {chatOpen && (
-                <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-96 bg-[#0F172A] border-l border-slate-700 shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col">
-                    <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center">
-                                <Bot className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-bold text-white">GridMentor AI</h3>
-                                <p className="text-[10px] text-green-400 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Online
-                                </p>
-                            </div>
-                        </div>
-                        <button onClick={() => setChatOpen(false)} className="text-slate-400 hover:text-white">
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {chatHistory.filter(m => m.role !== 'system').map((msg, i) => (
-                            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] rounded-lg p-3 text-sm ${msg.role === 'user'
-                                    ? 'bg-indigo-600 text-white rounded-br-none'
-                                    : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-bl-none'
-                                    }`}>
-                                    {msg.content}
-                                </div>
-                            </div>
-                        ))}
-                        {isChatting && (
-                            <div className="flex justify-start">
-                                <div className="bg-slate-800 rounded-lg p-3 border border-slate-700 rounded-bl-none">
-                                    <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <form onSubmit={handleChatSubmit} className="p-4 border-t border-slate-800 bg-slate-900">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={chatInput}
-                                onChange={(e) => setChatInput(e.target.value)}
-                                placeholder="Bahas strategi visual..."
-                                className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-4 pr-12 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
-                            />
-                            <button
-                                type="submit"
-                                disabled={!chatInput.trim() || isChatting}
-                                className="absolute right-2 top-2 p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-colors"
-                            >
-                                <Send className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
+            {/* CHAT DRAWER REMOVED */}
             {/* GENERATE PROMPT MODAL */}
             {promptModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
