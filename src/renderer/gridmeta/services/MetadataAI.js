@@ -12,7 +12,10 @@
 const getSystemPrompt = (config) => {
     const titleLength = config.titleLength || 10;
     const descLength = config.descriptionLength || 30;
-    const kwCount = config.keywordCount || 49;
+    const targetCount = config.keywordCount || 49;
+    // Request significantly more (x2) to create a large pool for trimming.
+    // Ensure at least 60 to prevent under-generation for small targets.
+    const requestCount = Math.max(targetCount * 2, 60);
 
     return `
 Analyze the provided image/video and generate high-quality metadata for Adobe Stock.
@@ -26,8 +29,8 @@ Your goal is to maximize SEO and commercial conversion.
 - **Description**: Detailed and benefit-focused. Max ${descLength} words or ~150 characters.
   - Explain the mood, atmosphere, and potential commercial uses.
   - DO NOT mention technical file info (vector, SVG, JPG, etc.).
-- **Keywords**: Generate exactly ${kwCount} highly relevant single-word keywords.
-  - Target range: 45-${kwCount} keywords. DO NOT EXCEED ${kwCount}.
+- **Keywords**: Generate AT LEAST ${requestCount} highly relevant single-word keywords.
+  - You MUST provide a MINIMUM of ${requestCount} keywords. It is better to provide MORE than fewer.
   - NO compound words or phrases.
   - NO dashes or hyphens.
   - Prioritize search volume and buyer intent.
@@ -36,7 +39,7 @@ Your goal is to maximize SEO and commercial conversion.
 **CRITICAL RULES:**
 - NO reference to "image", "vector", "graphic", "illustration" unless it's the subject.
 - NO technical jargon about file formats.
-- STRICTLY LIMIT KEYWORDS TO ${kwCount}. DO NOT GENERATE MORE.
+- ENSURE YOU GENERATE AT LEAST ${targetCount} KEYWORDS. DO NOT GENERATE FEWER.
 - STRICTLY return raw JSON based on the structure below.
 
 Output MUST be valid JSON with this structure:
@@ -60,21 +63,44 @@ export const MetadataAI = {
     async generate(file, fileData, config) {
         // Strip data URL prefix if present for APIs that need raw base64
         const base64Clean = fileData.split(',')[1];
+        let result;
 
         switch (config.provider) {
             case 'gemini':
-                return this.callGemini(base64Clean, config, file.mimeType || file.type);
+                result = await this.callGemini(base64Clean, config, file.mimeType || file.type);
+                break;
             case 'gpt':
-                return this.callGPT(fileData, config); // GPT usually handles data URI automatically or we parse it
+                result = await this.callGPT(fileData, config); // GPT usually handles data URI automatically or we parse it
+                break;
             case 'ollama':
-                return this.callOllama(base64Clean, config);
+                result = await this.callOllama(base64Clean, config);
+                break;
             case 'groq':
-                return this.callGroq(fileData, config); // Groq mimics OpenAI API
+                result = await this.callGroq(fileData, config); // Groq mimics OpenAI API
+                break;
             case 'mock': // For testing/dev
-                return this.callMock();
+                result = await this.callMock();
+                break;
             default:
                 throw new Error('Unknown AI Provider');
         }
+
+        // Post-Processing strictly enforce keyword count
+        if (result && result.keywords) {
+            const desiredCount = config.keywordCount || 49;
+            let kwList = result.keywords.split(',').map(k => k.trim()).filter(Boolean);
+
+            // Trim if too many (we requested +5, so this is expected)
+            if (kwList.length > desiredCount) {
+                kwList = kwList.slice(0, desiredCount);
+            }
+
+            // Update result
+            result.keywords = kwList.join(', ');
+            console.log(`[GridMeta] Enforced keyword count: ${kwList.length} (Requested: ${desiredCount})`);
+        }
+
+        return result;
     },
 
     async callMock() {
@@ -153,7 +179,7 @@ export const MetadataAI = {
                     ]
                 }
             ],
-            max_tokens: 300
+            max_tokens: 1000
         };
 
         const response = await fetch(url, {

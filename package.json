@@ -1,6 +1,6 @@
 {
   "name": "gridverse",
-  "version": "3.4.8",
+  "version": "3.4.9",
   "description": "Browser automation bot with React UI",
   "main": "src/main/main.js",
   "scripts": {
