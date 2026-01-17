@@ -14,7 +14,7 @@
     "dist:all": "cross-env USE_SYSTEM_WINE=true vite build && electron-builder -mw --x64"
   },
   "keywords": [],
-  "author": "",
+  "author": "Social Clouds",
   "license": "ISC",
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
@@ -87,17 +87,24 @@
       "src/preload/**/*",
       "src/automation/**/*",
       "package.json",
-      "assets/**/*",
-      "puppeteer-chromium/**/*",
-      "browsers_mac/**/*"
+      "assets/**/*"
     ],
-    "asarUnpack": [
-      "puppeteer-chromium/**/*",
-      "browsers_mac/**/*"
-    ],
+    "asarUnpack": [],
     "win": {
       "target": "nsis",
-      "icon": "assets/logo.ico"
+      "icon": "assets/logo.ico",
+      "files": [
+        "dist/**/*",
+        "src/main/**/*",
+        "src/preload/**/*",
+        "src/automation/**/*",
+        "package.json",
+        "assets/**/*",
+        "puppeteer-chromium/**/*"
+      ],
+      "asarUnpack": [
+        "puppeteer-chromium/**/*"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -114,7 +121,19 @@
       ],
       "icon": "assets/logo.png",
       "hardenedRuntime": true,
-      "gatekeeperAssess": false
+      "gatekeeperAssess": false,
+      "files": [
+        "dist/**/*",
+        "src/main/**/*",
+        "src/preload/**/*",
+        "src/automation/**/*",
+        "package.json",
+        "assets/**/*",
+        "browsers_mac/**/*"
+      ],
+      "asarUnpack": [
+        "browsers_mac/**/*"
+      ]
     },
     "dmg": {
       "contents": [
