@@ -9,6 +9,7 @@ const UpdateNotification = ({ isManualCheck, onCheckComplete }) => {
     const [error, setError] = useState(null);
     const [upToDate, setUpToDate] = useState(false);
 
+    // Effect for listeners
     useEffect(() => {
         if (!window.api) return;
 
@@ -28,8 +29,7 @@ const UpdateNotification = ({ isManualCheck, onCheckComplete }) => {
             console.log('Update not available:', info);
             if (isManualCheck) {
                 setUpToDate(true);
-                setUpdateInfo(info); // Might contain current version info
-                // Auto hide after 3 seconds
+                setUpdateInfo(info);
                 setTimeout(() => {
                     setUpToDate(false);
                 }, 3000);
@@ -62,12 +62,6 @@ const UpdateNotification = ({ isManualCheck, onCheckComplete }) => {
             if (onCheckComplete) onCheckComplete();
         });
 
-        // Note: window.api.receive in preload typically adds a listener. 
-        // If it returns a cleanup function, we should use it. 
-        // Based on typical implementation in this project context (from common patterns), 
-        // it might not return cleanup. If so, we risk duplicate listeners if component remounts.
-        // Assuming App.jsx renders this once and keeps it mounted.
-
         return () => {
             if (removeAvailable) removeAvailable();
             if (removeNotAvailable) removeNotAvailable();
@@ -76,6 +70,13 @@ const UpdateNotification = ({ isManualCheck, onCheckComplete }) => {
             if (removeError) removeError();
         };
     }, [isManualCheck, onCheckComplete, downloading]);
+
+    // Effect for triggering check on mount
+    useEffect(() => {
+        if (window.api) {
+            window.api.send('check-for-update');
+        }
+    }, []);
 
     const handleInstall = () => {
         window.api.send('install-update');

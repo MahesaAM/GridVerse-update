@@ -21,13 +21,13 @@ const electronAPI = {
 const api = {
     send: (channel, data) => {
         // whitelist channels
-        let validChannels = ['start-automation', 'stop-automation', 'minimize', 'maximize', 'close', 'save-accounts', 'get-accounts', 'login-accounts', 'install-update', 'set-next-download-name'];
+        let validChannels = ['start-automation', 'stop-automation', 'minimize', 'maximize', 'close', 'save-accounts', 'get-accounts', 'login-accounts', 'install-update', 'set-next-download-name', 'check-for-update'];
         if (validChannels.includes(channel)) {
             ipcRenderer.send(channel, data);
         }
     },
     receive: (channel, func) => {
-        let validChannels = ['log-update', 'automation-status', 'accounts-data', 'item-status', 'account-update', 'update-available', 'update-downloaded', 'update-error', 'download-progress'];
+        let validChannels = ['log-update', 'automation-status', 'accounts-data', 'item-status', 'account-update', 'update-available', 'update-downloaded', 'update-error', 'download-progress', 'update-not-available'];
         if (validChannels.includes(channel)) {
             ipcRenderer.on(channel, (event, ...args) => func(...args));
         }

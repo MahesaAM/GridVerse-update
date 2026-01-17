@@ -12,6 +12,7 @@ import GridVectorApp from './gridvector/GridVectorApp';
 import GridTrendsApp from './gridtrends/GridTrendsApp';
 import BrowserLayout from './components/Browser/BrowserLayout';
 import WindowControls from './components/WindowControls';
+import UpdateNotification from './components/UpdateNotification';
 
 
 class ErrorBoundary extends React.Component {
@@ -144,31 +145,39 @@ export default function App() {
 
     if (isAuthChecking) {
         return (
-            <div className="h-screen w-screen bg-black flex items-center justify-center">
-                <div
-                    className="w-20 h-20"
-                    style={{
-                        backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle fill="%23FFFFFF" stroke="%23FFFFFF" stroke-width="15" r="15" cx="40" cy="65"><animate attributeName="cy" calcMode="spline" dur="2" values="65;135;65;" keySplines=".5 0 .5 1;.5 0 .5 1" repeatCount="indefinite" begin="-.4"></animate></circle><circle fill="%23FFFFFF" stroke="%23FFFFFF" stroke-width="15" r="15" cx="100" cy="65"><animate attributeName="cy" calcMode="spline" dur="2" values="65;135;65;" keySplines=".5 0 .5 1;.5 0 .5 1" repeatCount="indefinite" begin="-.2"></animate></circle><circle fill="%23FFFFFF" stroke="%23FFFFFF" stroke-width="15" r="15" cx="160" cy="65"><animate attributeName="cy" calcMode="spline" dur="2" values="65;135;65;" keySplines=".5 0 .5 1;.5 0 .5 1" repeatCount="indefinite" begin="0"></animate></circle></svg>')`,
-                        backgroundSize: 'contain',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center',
-                    }}
-                ></div>
-            </div>
+            <>
+                <UpdateNotification />
+                <div className="h-screen w-screen bg-black flex items-center justify-center">
+                    <div
+                        className="w-20 h-20"
+                        style={{
+                            backgroundImage: `url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle fill="%23FFFFFF" stroke="%23FFFFFF" stroke-width="15" r="15" cx="40" cy="65"><animate attributeName="cy" calcMode="spline" dur="2" values="65;135;65;" keySplines=".5 0 .5 1;.5 0 .5 1" repeatCount="indefinite" begin="-.4"></animate></circle><circle fill="%23FFFFFF" stroke="%23FFFFFF" stroke-width="15" r="15" cx="100" cy="65"><animate attributeName="cy" calcMode="spline" dur="2" values="65;135;65;" keySplines=".5 0 .5 1;.5 0 .5 1" repeatCount="indefinite" begin="-.2"></animate></circle><circle fill="%23FFFFFF" stroke="%23FFFFFF" stroke-width="15" r="15" cx="160" cy="65"><animate attributeName="cy" calcMode="spline" dur="2" values="65;135;65;" keySplines=".5 0 .5 1;.5 0 .5 1" repeatCount="indefinite" begin="0"></animate></circle></svg>')`,
+                            backgroundSize: 'contain',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center',
+                        }}
+                    ></div>
+                </div>
+
+            </>
         );
     }
 
     if (!isAuthenticated) {
         return (
-            <Login onLoginSuccess={(session) => {
-                setIsAuthenticated(true);
-                if (session && session.expired) {
-                    const d = new Date(session.expired);
-                    setExpirationDate(d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }));
-                } else {
-                    setExpirationDate('Lifetime');
-                }
-            }} />
+            <>
+                <UpdateNotification />
+                <Login onLoginSuccess={(session) => {
+                    setIsAuthenticated(true);
+                    if (session && session.expired) {
+                        const d = new Date(session.expired);
+                        setExpirationDate(d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }));
+                    } else {
+                        setExpirationDate('Lifetime');
+                    }
+                }} />
+
+            </>
         );
     }
 
@@ -224,6 +233,7 @@ export default function App() {
 
         return (
             <ErrorBoundary>
+                <UpdateNotification />
                 <div className="h-screen w-screen bg-black flex flex-col overflow-hidden">
                     {/* Detached Window Header */}
                     <div className="h-10 shrink-0 bg-[#0a0a0a] border-b border-white/5 flex items-center justify-between px-4 draggable-region select-none z-50">
@@ -246,6 +256,7 @@ export default function App() {
 
     return (
         <ErrorBoundary>
+            <UpdateNotification />
             <BrowserLayout
                 onLogout={handleLogout}
                 appVersion={appVersion}
